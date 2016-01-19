@@ -105,21 +105,11 @@ help/\* for helper routines (e.g. wizard or steps to make something)
 ## usage example
 
 ```python
-    import percolation as P
+import percolation as P
 
-    po=P.rdf.ontology() # rdflib.Graph()
-    metadata=P.rdf.legacyMetadata() # rdflib.Graph()
-    percolation_graph=po+metadata # rdflib.Graph()
-    snapshot=P.rdf.oneTranslate() # URI
-    network=P.topology.makeNetwork(snapshot) # networx network
-    topological_analysis=P.topology.analyse(network) # rdflib.Graph()
-    textual_analysis=P.text.analyse(snapshot) # rdflib.Graph()
-    integrated_analysis=P.integrated.analyse(snapshot) # rdflib.Graph()
-    P.tables.make(integrated_analysis,"/tables/") # render latex, js and md tables
-    P.audiovisuals.make(integrated_analysis,"/av/") # render sonification in sync with stopmotion animation from data
-    user_uri=P.oneUser(integrated_analysis) # uri
-    P.audiovisuals.makeMusic(integrated_analysis,"/av/",focus=user_uri) # render music
-    P.web.startServer(port=5077) # start server in localhost:5077 or better specify
+P.analyse() # take measures and deliver assertions
+P.legacy.media_rendering.render() # make tables, music and animation
+P.web() # start server to make data and media accessible in the Web
 ```
 
 ## Further information
