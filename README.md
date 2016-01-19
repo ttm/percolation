@@ -2,7 +2,6 @@
 the percolation python package for harnessing open linked social data
 
 ## core features
-
   - Provide routines for percolation in social systems by experiments and processes.
   - Ease knowledge about the networked self.
   - Analyses of social systems through textual, topological, temporal statistics within a typology framework of agents and networks.
@@ -28,14 +27,12 @@ This install method is especially useful when reloading modified module in subse
 (usually with the standard importlib).
 
 Percolation uses social, music and visuals packages to enable anthropological physics experiments and social harnessing:
-
-  - https://github.com/ttm/social
-  - https://github.com/ttm/music
-  - https://github.com/ttm/visuals
+- https://github.com/ttm/social
+- https://github.com/ttm/music
+- https://github.com/ttm/visuals
 
 See this deprecated document for some of the intended goals:
-
-  - https://github.com/ttm/percolationlegacy/blob/master/latex/percolation-article.pdf
+- https://github.com/ttm/percolationlegacy/blob/master/latex/percolation-article.pdf
 
 
 ## coding conventions
@@ -56,18 +53,11 @@ Every feature should be related to at least one legacy/ outline.
 
 Routines should be oriented towards making or navigating percolation graph paths directly or through numeric computation and rendering of new triples in Open Linked Social Data and external resources such as the DBpedia sparql endpoint: http://dbpedia.org/sparql
 
-### notes
-
-In the integrated measures, see if networks that have peculiar distribution of measures in erdos sectors also have smaller KS-distance between histograms of degrees and other topological measures. Generalizing, see if structures with an outlier of a measure (or set of measures) is correlated with other measures characteristics, such as the correlation histogram.
-
-See legacy.triples for further notes.
-
 ### the modules are: 
 
 bootstrap.py for PercolationServer and the canonic startup
 
 legacy/\* for standard usage outlines, analyses and media rendering from legacy data (Open Linked Open Data)
-
 - harnessing/\*.py for percolatory procedures (e.g. experiments), resource recommendation, self-knowledge and information collection and diffusion.
 - media\_rendering/ for general output of media (music.py, image.py, animation.py, table.py, game.py).
 - rdf 
@@ -76,7 +66,6 @@ legacy/\* for standard usage outlines, analyses and media rendering from legacy 
 - triples/\*.py triples with information about files and notes
 
 rdf/\* for rdf data managing
-
 - ontology.py triples and organization of the participation ontology (po), an umbrella ontology
 - reasoning.py reasoning on specific rdfs and owl rules to enhance performance and benchmarking among approaches
 - rdflib.py facilities for rdflib graph manipulation
@@ -92,18 +81,14 @@ statistics/\* for computing statistics appropriated to Open Linked Social Data
 - localization.py for mean, standard deviation, skewness and curtosis
 
 measures/\* for taking measures of social structures. It takes data and produces more informative data which is used in the analyses
-
 - text/\*.py for taking measures from chars, tokens, sentences, paragraphs of a single text
 - topology/\*.py for making networks and taking topological measures from a single structure
 - time/\*.py for taking circular measures of 
 - integrated/\*.py 
-
   - pca.py for aplication of principal component analysis to grouped entities and appropriated data
   - power\_law.py for measures about the optimum fit of the power-law 
   - kolmogorov\_smirnov.py for KS-distance and c statistics between the grouped entities.
-
 - multi/\* for measures of multiple structures
-
   - grouping.py for obtaining meaningful groups of entities (Erdos sectorialization, k-means, k-nearest neighbors, kohonen). Basic grouping of texts is the message, basic grouping for topology and time is the participant. The topmost grouping is the snapshot or collection of snapshots.
   - scale.py for measures in multiple scales (e.g. snapshots, snapshot, sector, user, message)
   - timeline.py for timeline sequences of structures, make unit root test and pca averages and stds
@@ -112,9 +97,10 @@ measures/\* for taking measures of social structures. It takes data and produces
 analysis/\* for deriving assertions from social structures (e.g. mean(token size) above mean of OLSD legacy. Same file tree as measures
 
 utils/\*.py
-
   - file.py for navigating and modifiling file structure
   - web/\* for integration to the WWW
+
+help/\* for helper routines (e.g. wizard or steps to make something)
 
 ## usage example
 
@@ -139,3 +125,11 @@ utils/\*.py
 ## Further information
 
 The percolation package is a work in progress.
+
+### notes
+
+In the integrated measures, see if networks that have peculiar distribution of measures in erdos sectors also have smaller KS-distance between histograms of degrees and other topological measures. Generalizing, see if structures with an outlier of a measure (or set of measures) is correlated with other measures characteristics, such as the correlation histogram.
+
+See legacy.triples for further notes.
+
+
