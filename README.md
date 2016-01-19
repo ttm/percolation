@@ -3,13 +3,13 @@ the percolation python package for harnessing open linked social data
 
 ## core features
 
-    - Provide routines for percolation in social systems by experiments and processes.
-    - Ease knowledge about the networked self.
-    - Analyses of social systems through textual, topological, temporal statistics within a typology framework of agents and networks.
-    - Art and games from social structures, such as music and animation.
-    - Integration of resources through RDF data and OWL ontologies.
-    - Cross provenance resource recommendation, extending facilities from the Participation package.
-    - WWW integration to provide data and media.
+  - Provide routines for percolation in social systems by experiments and processes.
+  - Ease knowledge about the networked self.
+  - Analyses of social systems through textual, topological, temporal statistics within a typology framework of agents and networks.
+  - Art and games from social structures, such as music and animation.
+  - Integration of resources through RDF data and OWL ontologies.
+  - Cross provenance resource recommendation, extending facilities from the Participation package.
+  - WWW integration to provide data and media.
 
 ## install with:
 
@@ -56,7 +56,7 @@ Every feature should be related to at least one legacy/ outline.
 
 Routines should be oriented towards making or navigating percolation graph paths directly or through numeric computation and rendering of new triples in Open Linked Social Data and external resources such as the DBpedia sparql endpoint: http://dbpedia.org/sparql
 
-### Notes
+### notes
 
 In the integrated measures, see if networks that have peculiar distribution of measures in erdos sectors also have smaller KS-distance between histograms of degrees and other topological measures. Generalizing, see if structures with an outlier of a measure (or set of measures) is correlated with other measures characteristics, such as the correlation histogram.
 
@@ -101,7 +101,6 @@ measures/\* for taking measures of social structures. It takes data and produces
   - pca.py for aplication of principal component analysis to grouped entities and appropriated data
   - power\_law.py for measures about the optimum fit of the power-law 
   - kolmogorov\_smirnov.py for KS-distance and c statistics between the grouped entities.
-  - 
 
 - multi/\* for measures of multiple structures
 
@@ -117,7 +116,7 @@ utils/\*.py
   - file.py for navigating and modifiling file structure
   - web/\* for integration to the WWW
 
-## Usage example
+## usage example
 
 ```python
     import percolation as P
