@@ -17,7 +17,7 @@ def startSession(context="session"):
     else:
         triples=[]
     session_uri=P.rdf.timestampedURI(NS.per.Session,nick,now) # from rdf.rdflib OK
-    current_status_uri=NS.per.CurrentStatus # class in per: ontology
+    current_status_uri=NS.per.CurrentStatus # class in per: ontology OK
     triples+=[
              (current_status_uri,NS.per.currentSession,session_uri),
              (session_uri,NS.per.started,now),
@@ -25,7 +25,7 @@ def startSession(context="session"):
              (current_status_uri,NS.per.currentUser,current_user_uri),
              ]
 
-    P.add(triples,context=context) # from rdf.rdflib
+    P.add(triples,context=context) # from rdf.rdflib OK
     P.rdf.minimumOntology() # from rdf.ontology
     P.rdf.legacyMetadata() # from legacy.triples
     P.rdf.rdfsInference("minimum_ontology","legacy_metadata","session_legacy_metadata") # from rdf.inference

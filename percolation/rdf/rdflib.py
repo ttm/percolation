@@ -23,3 +23,10 @@ def get(subject=None,predicate=None,object_=None,context=None,percolation_graph=
     if len(triples)==1: # only one triple
         triples=triples[0]
     return triples
+def add(triples,context=None,percolation_graph=None):
+    if not percolation_graph:
+        percolation_graph=P.percolation_graph
+    quads=[]
+    for triple in triples:
+        quads+=[(triple[0],triple[1],triple[2],context)]
+    percolation_graph.addN(quads)
