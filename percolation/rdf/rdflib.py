@@ -65,3 +65,14 @@ def add(triples,context=None,percolation_graph=None):
            object_=r.Literal(object_)
         quads+=[(triple[0],triple[1],object_,context)]
     percolation_graph.addN(quads)
+def set_(triples,context=None,percolation_graph=None):
+    if not percolation_graph:
+        percolation_graph=P.percolation_graph
+    for triple in triples:
+        object_=triple[2]
+        if not isinstance(object_,(r.URIRef,r.Namespace)):
+           object_=r.Literal(object_)
+        quad_=(triple[0],triple[1],None,context)
+        percolation_graph.remove(quad_)
+        quad=(triple[0],triple[1],object_,context)
+        percolation_graph.add(quad)
