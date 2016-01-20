@@ -50,7 +50,7 @@ and developed by user with rdf or automatically while other percolation tasks ar
 The statistics module have routines for obtaining statistics from data, which are applied
 to data in measures.
 The analyses module make (qualitative) assertions about the measures in social structures.
-The utils eases file navigation and sharing in local system and web and small features that fit nowhere else.
+The utils eases file navigation and sharing in local system and web, percolation status register and small features that fit nowhere else.
 The help module have some directions on percolation usage while legacy module have diverse usage outlines.
 
 #### the modules are: 
@@ -96,6 +96,7 @@ measures/\* for taking measures of social structures. It takes data and produces
 analysis/\* for deriving assertions from social structures (e.g. mean(token size) above mean of OLSD legacy. Same file tree as measures
 
 utils/\*.py
+  - status.py for navigating and modifying file structure
   - file.py for navigating and modifying file structure
   - web/\* for integration to the WWW
 
@@ -105,7 +106,7 @@ help/\* for helper routines (e.g. wizard or steps to make something)
 ```python
 import percolation as P
 
-P.start() # starts percolation server and session with metadata about data
+P.start() # starts percolation server and session with metadata about open linked social data
 P.analyse() # take measures and deliver assertions
 P.legacy.media_rendering.render() # make tables, music and animation
 P.web() # start server to make data and media accessible in the Web
