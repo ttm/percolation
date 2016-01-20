@@ -65,6 +65,10 @@ legacy/\* for standard usage outlines, analyses and media rendering from legacy 
 - analyses/\*.py for standard analysis of some structures, results in assertions and data endorsements
 - measures/\*.py for measurement routines, data structures and values from initial data
 - triples/\*.py triples with information about files and notes
+  - datasets.py for triples on the datasets of open linked social data with local and remote filenames
+  - linksets.py for triples that link datasets (e.g. irc:Participant#hybrid po:sameAs fb:Participant#renato.fabbri)
+  - enrichments.py for hand notes and other structures for enrichment of the percolation status (be traslated to rdf)
+  - software.py for triples of software and ontologies pertinent to percolation environment
 
 rdf/\* for rdf data managing
 - ontology.py triples and organization of the participation ontology (po), an umbrella ontology
