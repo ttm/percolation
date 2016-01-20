@@ -63,11 +63,13 @@ legacy/\* for standard usage outlines, analyses and media rendering from legacy 
 - analyses/\*.py for standard analysis of some structures, results in assertions and data endorsements
 - measures/\*.py for measurement routines, data structures and values from initial data
 - triples/\*.py triples with information about files and notes
+
 rdf/\* for rdf data managing
 - ontology.py triples and organization of the participation ontology (po), an umbrella ontology
 - reasoning.py reasoning on specific rdfs and owl rules to enhance performance and benchmarking among approaches
 - rdflib.py facilities for rdflib graph manipulation
 - sparql.py facilities for querying and connecting through sparql
+
 statistics/\* for computing statistics appropriated to Open Linked Social Data
 - kolmogorv\_smirnov.py for obtaining KS distance and c statistics
 - unit\_root\_test.py for e.g. the augmented Dickey–Fuller test
@@ -76,6 +78,7 @@ statistics/\* for computing statistics appropriated to Open Linked Social Data
 - circular.py for circular statistics
 - localization.py for mean, standard deviation, skewness and kurtosis
 - grouping/\*.py for obtaining meaningful groups of entities through Erdos sectorialization, k-means, k-nn, Kohonen, genetic algorithms, etc.
+
 measures/\* for taking measures of social structures. It takes data and produces more informative data which is used in the analyses
 - text/\*.py for taking measures from chars, tokens, sentences, paragraphs of a single text
 - topology/\*.py for making networks and taking topological measures from a single structure
@@ -89,10 +92,13 @@ measures/\* for taking measures of social structures. It takes data and produces
   - scale.py for measures in multiple scales (e.g. snapshots, snapshot, sector, user, message)
   - timeline.py for timeline sequences of structures, make unit root test and pca averages and stds
   - scale\_timeline.py for multiple scale timelines, find best fit for power-law and 
+
 analysis/\* for deriving assertions from social structures (e.g. mean(token size) above mean of OLSD legacy. Same file tree as measures
+
 utils/\*.py
   - file.py for navigating and modifying file structure
   - web/\* for integration to the WWW
+
 help/\* for helper routines (e.g. wizard or steps to make something)
 
 ## usage example
