@@ -29,7 +29,7 @@ def startSession(context="session"):
              ]
     P.add(triples,context=context) # from rdf.rdflib OK
     P.rdf.minimumOntology() # from rdf.ontology
-    P.rdf.legacyMetadata() # from legacy.triples
+    P.legacy.legacyMetadata() # from legacy.triples
     P.rdf.rdfsInference("minimum_ontology","legacy_metadata","session_legacy_metadata") # from rdf.inference
     # by this point, one should have the named graphs/contexts:
     # session, minimum_ontology, legacy_metadata, session_legacy_metadata
