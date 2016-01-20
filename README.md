@@ -28,8 +28,10 @@ Percolation uses social, music and visuals packages to enable anthropological ph
 
 ## coding conventions
 A function name has a verb if it changes state of initialized objects, if it only "returns something", it is has no verb in name.
+This rule is extended for the cases where instead of return triples, they are added to the percolation\_graph.
 
-Classes, functions and variables are writen in CamelCase, headlessCamelCase and lowercase, respectively. Underline is used only in variable names where the words in variable name make something unreadable (usually because the resulting name is big).
+Classes, functions and variables are writen in CamelCase, headlessCamelCase and lowercase, respectively.
+Underline is used only in variable names where the words in variable name make something unreadable (usually because the resulting name is big).
 
 The code is the documentation. Code should be very readable to avoid writing unnecessary documentation and duplicating routine representations. This adds up to using docstrings to give context to the objects or omitting the docstrings.
 

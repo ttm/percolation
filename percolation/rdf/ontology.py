@@ -1,4 +1,8 @@
-def percolationSystem()
+import percolation as P
+from .rdflib import NS
+a=NS.rdf.type
+
+def percolationSystem():
     triples=[
             (NS.per.CurrentStatus, a, NS.per.SystemStatus)
             ]
@@ -6,7 +10,7 @@ def minimumOntology(context="minimum_ontology"):
     triples=rdfsTriples()
     if context=="triples":
         return triples
-    P.percolation_graph.add(triples)
+    P.add(triples,context=context)
 
 def rdfsTriples():
     """Sub Class/Property and range domain assertions"""
@@ -14,12 +18,14 @@ def rdfsTriples():
             (NS.po.onlineMetaXMLFile, NS.rdfs.subPropertyOf, NS.void.dataDump),
             (NS.po.onlineMetaTTLFile, NS.rdfs.subPropertyOf, NS.void.dataDump),
             (NS.po.MetaXMLFilename,   NS.rdfs.subPropertyOf, NS.void.dataDump),
-            (NS.po.MetaTTLFilename    NS.rdfs.subPropertyOf, NS.void.dataDump),
+            (NS.po.MetaTTLFilename,   NS.rdfs.subPropertyOf, NS.void.dataDump),
                        
             (NS.po.onlineInteractionXMLFile,NS.rdfs.subPropertyOf, NS.void.dataDump),
             (NS.po.onlineinteractionTTLFile,NS.rdfs.subPropertyOf, NS.void.dataDump),
             (NS.po.interactionXMLFilename,  NS.rdfs.subPropertyOf, NS.void.dataDump),
             (NS.po.interactionTTLFilename,  NS.rdfs.subPropertyOf, NS.void.dataDump),
+            ]
+    return triples
 
 def participantRDFSStructure(): # participant 
     triples=[
