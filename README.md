@@ -11,18 +11,12 @@ the percolation python package for harnessing open linked social data
   - WWW integration to provide data and media.
 
 ## install with:
-
     $ pip install percolation
-
 or
-
     $ python setup.py install
-
 For greater control of customization (and debugging), clone the repo and install with pip with -e:
-
     $ git clone https://github.com/ttm/percolation.git
     $ pip install -e <path_to_repo>
-
 This install method is especially useful when reloading modified module in subsequent runs of percolation
 (usually with the standard importlib).
 
@@ -31,12 +25,8 @@ Percolation uses social, music and visuals packages to enable anthropological ph
 - https://github.com/ttm/music
 - https://github.com/ttm/visuals
 
-See this deprecated document for some of the intended goals:
-- https://github.com/ttm/percolationlegacy/blob/master/latex/percolation-article.pdf
-
 
 ## coding conventions
-
 A function name has a verb if it changes state of initialized objects, if it only "returns something", it is has no verb in name.
 
 Classes, functions and variables are writen in CamelCase, headlessCamelCase and lowercase, respectively. Underline is used only in variable names where the words in variable name make something unreadable (usually because the resulting name is big).
@@ -53,73 +43,80 @@ Every feature should be related to at least one legacy/ outline.
 
 Routines should be oriented towards making or navigating percolation graph paths directly or through numeric computation and rendering of new triples in Open Linked Social Data and external resources such as the DBpedia sparql endpoint: http://dbpedia.org/sparql
 
-### the modules are: 
+### package structure
+Data and metadata is in the P.percolation\_graph=rdflib.ConjunctiveGraph()
+which is persistent across runs in the system and is initialized by bootstrap.py
+and developed by user with rdf or automatically while other percolation tasks are run.
+The statistics module have routines for obtaining statistics from data, which are applied
+to data in measures.
+The analyses module make (qualitative) assertions about the measures in social structures.
+The utils eases file navigation and sharing in local system and web and small features that fit nowhere else.
+The help module have some directions on percolation usage while legacy module have diverse usage outlines.
 
+#### the modules are: 
 bootstrap.py for PercolationServer and the canonic startup
 
 legacy/\* for standard usage outlines, analyses and media rendering from legacy data (Open Linked Open Data)
-- harnessing/\*.py for percolatory procedures (e.g. experiments), resource recommendation, self-knowledge and information collection and diffusion.
+- harnessing/\*.py for percolative procedures (e.g. experiments), resource recommendation, self-knowledge and information collection and diffusion.
 - media\_rendering/ for general output of media (music.py, image.py, animation.py, table.py, game.py).
 - rdf 
-- analyses/\*.py for standard analysis of some structures, resunts in assertions and data endorsements
+- analyses/\*.py for standard analysis of some structures, results in assertions and data endorsements
 - measures/\*.py for measurement routines, data structures and values from initial data
 - triples/\*.py triples with information about files and notes
-
 rdf/\* for rdf data managing
 - ontology.py triples and organization of the participation ontology (po), an umbrella ontology
 - reasoning.py reasoning on specific rdfs and owl rules to enhance performance and benchmarking among approaches
 - rdflib.py facilities for rdflib graph manipulation
-- sparql.py facilities for queying and connecting through sparql
-
+- sparql.py facilities for querying and connecting through sparql
 statistics/\* for computing statistics appropriated to Open Linked Social Data
-
-- kolmogorv\_smirnov.py for obtainance of KS distance and c statistics
+- kolmogorv\_smirnov.py for obtaining KS distance and c statistics
 - unit\_root\_test.py for e.g. the augmented Dickey–Fuller test
 - pca.py for correlation and principal component analysis
 - outliers.py for the detection of outliers in data
-- circular.py for circular statisics
-- localization.py for mean, standard deviation, skewness and curtosis
-
+- circular.py for circular statistics
+- localization.py for mean, standard deviation, skewness and kurtosis
+- grouping/\*.py for obtaining meaningful groups of entities through Erdos sectorialization, k-means, k-nn, Kohonen, genetic algorithms, etc.
 measures/\* for taking measures of social structures. It takes data and produces more informative data which is used in the analyses
 - text/\*.py for taking measures from chars, tokens, sentences, paragraphs of a single text
 - topology/\*.py for making networks and taking topological measures from a single structure
 - time/\*.py for taking circular measures of 
 - integrated/\*.py 
-  - pca.py for aplication of principal component analysis to grouped entities and appropriated data
+  - pca.py for application of principal component analysis to grouped entities and appropriated data
   - power\_law.py for measures about the optimum fit of the power-law 
   - kolmogorov\_smirnov.py for KS-distance and c statistics between the grouped entities.
 - multi/\* for measures of multiple structures
-  - grouping.py for obtaining meaningful groups of entities (Erdos sectorialization, k-means, k-nearest neighbors, kohonen). Basic grouping of texts is the message, basic grouping for topology and time is the participant. The topmost grouping is the snapshot or collection of snapshots.
+  - grouping.py for obtaining meaningful groups of entities. Basic grouping of texts is the message, basic grouping for topology and time is the participant. The topmost grouping is the snapshot or collection of snapshots.
   - scale.py for measures in multiple scales (e.g. snapshots, snapshot, sector, user, message)
   - timeline.py for timeline sequences of structures, make unit root test and pca averages and stds
   - scale\_timeline.py for multiple scale timelines, find best fit for power-law and 
-
 analysis/\* for deriving assertions from social structures (e.g. mean(token size) above mean of OLSD legacy. Same file tree as measures
-
 utils/\*.py
-  - file.py for navigating and modifiling file structure
+  - file.py for navigating and modifying file structure
   - web/\* for integration to the WWW
-
 help/\* for helper routines (e.g. wizard or steps to make something)
 
 ## usage example
-
 ```python
 import percolation as P
 
+P.start() # starts percolation server and session with metadata about data
 P.analyse() # take measures and deliver assertions
 P.legacy.media_rendering.render() # make tables, music and animation
 P.web() # start server to make data and media accessible in the Web
 ```
 
-## Further information
-
+## further information
 The percolation package is a work in progress.
 
 ### notes
+In the integrated measures, see if networks that have peculiar distribution of measures in Erdos sectors also have smaller KS-distance between histograms of degrees and other topological measures. Generalizing, see if structures with an outlier of a measure (or set of measures) is correlated with other measures characteristics, such as the correlation histogram.
 
-In the integrated measures, see if networks that have peculiar distribution of measures in erdos sectors also have smaller KS-distance between histograms of degrees and other topological measures. Generalizing, see if structures with an outlier of a measure (or set of measures) is correlated with other measures characteristics, such as the correlation histogram.
+Are there benchmark datasets and results for the statistics used in percolation? If so, integrate them into legacy.statistics.tests.
+Otherwise, make benchmarks from synthesized and empirical data.
 
 See legacy.triples for further notes.
 
+See percolationLegacy issues at: https://github.com/ttm/percolationLegacy/issues
 
+See this deprecated document for some of the intended goals:
+https://github.com/ttm/percolationlegacy/blob/master/latex/percolation-article.pdf
