@@ -30,7 +30,7 @@ def startSession(context="session"):
     P.set_(triples,context=context) # from rdf.rdflib OK
     P.rdf.minimumOntology() # from rdf.ontology
     P.legacy.triples.datasets.datasets() # from legacy.triples
-    P.rdf.inference.rdfsInference("minimum_ontology","legacy_metadata","session_legacy_metadata") # from rdf.inference
+    P.rdf.inference.rdfsInference("void","minimum_ontology","session_legacy_metadata") # from rdf.inference
     # by this point, one should have the named graphs/contexts:
     # session, minimum_ontology, legacy_metadata, session_legacy_metadata
 def randomNick():

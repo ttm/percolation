@@ -56,6 +56,8 @@ def get(subject=None,predicate=None,object_=None,context=None,percolation_graph=
         triples=triples[0]
     return triples
 def add(triples,context=None,percolation_graph=None):
+    if isinstance(triples[0],(r.URIRef,r.Namespace)):
+        triples=[triples]
     if not percolation_graph:
         percolation_graph=P.percolation_graph
     quads=[]

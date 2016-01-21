@@ -16,6 +16,11 @@ def rdfsTriples():
     """Sub Class/Property and range domain assertions"""
     triples=[
             (NS.po.onlineMetaXMLFile, NS.rdfs.subPropertyOf, NS.void.dataDump),
+            (NS.po.onlineMetaXMLFile, NS.rdfs.subPropertyOf, NS.void.dataDump),
+            (NS.po.FacebookSnapshot,NS.rdfs.subClassOf,NS.po.Snapshot),
+
+
+            (NS.po.onlineMetaXMLFile, NS.rdfs.subPropertyOf, NS.void.dataDump),
             (NS.po.onlineMetaTTLFile, NS.rdfs.subPropertyOf, NS.void.dataDump),
             (NS.po.MetaXMLFilename,   NS.rdfs.subPropertyOf, NS.void.dataDump),
             (NS.po.MetaTTLFilename,   NS.rdfs.subPropertyOf, NS.void.dataDump),
