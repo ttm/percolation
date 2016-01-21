@@ -48,14 +48,13 @@ def timestampedURI(uriref=None,stringid="",datetime_=None):
     sid=stringid+datetime_.isoformat()
     newuriref=uriref+"#"+sid
     return newuriref
-def get(subject=None,predicate=None,object_=None,context=None,percolation_graph=None):
+def get(subject=None,predicate=None,object_=None,context_=None,percolation_graph=None):
     if not percolation_graph:
         percolation_graph=P.percolation_graph
-    contexts=[i for i in percolation_graph.contexts()]
-    if context and (context not in contexts):
-        c("context not existent, get will return empty")
-
-    triples=[triple for triple in percolation_graph.triples((subject,predicate,object_),context)]
+    contexts=[i for i in context(percolation_graph=percolation_graph)]
+    if context_ and (context_ not in contexts):
+        c("context",context,"not existent, get will return empty")
+    triples=[triple for triple in percolation_graph.triples((subject,predicate,object_),context_)]
     if len(triples)==1: # only one triple
         triples=triples[0]
     return triples
@@ -71,6 +70,20 @@ def add(triples,context=None,percolation_graph=None):
            object_=r.Literal(object_)
         quads+=[(triple[0],triple[1],object_,context)]
     percolation_graph.addN(quads)
+def context(context=None,command=None,percolation_graph=None):
+    if not percolation_graph:
+        percolation_graph=P.percolation_graph
+    if not context:
+        graphlist=[i for i in percolation_graph.contexts()]
+        c("no context in P.context(), return context:",graphlist)
+        return graphlist
+    elif command==None:
+        graph=percolation_graph.get_context(context)
+        c("return context graph named",context,"ntriples: ",len(graph))
+        return graph
+    elif command=="remove":
+        percolation_graph.remove_context(context)
+        c("removed context: ", context,"return none")
 def set_(triples,context=None,percolation_graph=None):
     if not percolation_graph:
         percolation_graph=P.percolation_graph
