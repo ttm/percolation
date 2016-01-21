@@ -19,7 +19,13 @@ def datasets():
     # with some description
 def notes():
     pass
-
+def minimalTestData():
+    triples=[
+            (NS.po.SnapshotFoo+"#1", NS.fb.ego, True),
+            (NS.po.SnapshotFoo+"#1", NS.fb.userID, "1039203918"),
+            (NS.po.SnapshotFoo+"#1", NS.fb.user, NS.fb.Participant+"Foop"),
+            ]
+    P.add(triples,context="void")
 def void():
     triples=[
             (NS.po.SnapshotFoo+"#1", a, NS.po.FacebookSnapshot),

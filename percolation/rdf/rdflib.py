@@ -51,6 +51,10 @@ def timestampedURI(uriref=None,stringid="",datetime_=None):
 def get(subject=None,predicate=None,object_=None,context=None,percolation_graph=None):
     if not percolation_graph:
         percolation_graph=P.percolation_graph
+    contexts=[i for i in percolation_graph.contexts()]
+    if context and (context not in contexts):
+        c("context not existent, get will return empty")
+
     triples=[triple for triple in percolation_graph.triples((subject,predicate,object_),context)]
     if len(triples)==1: # only one triple
         triples=triples[0]

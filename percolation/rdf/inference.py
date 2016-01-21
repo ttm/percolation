@@ -19,19 +19,21 @@ def rdfsInference(data_context=None,ontology_context=None,infered_context=None):
     c("finished subclass reasoning")
     for subject, foo, object_ in P.percolation_graph.triples(\
             (None,NS.rdfs.subPropertyOf,None),context=ontology_context):
+        c(subject,foo,object_)
         for subject2,propertyfoo,object2 in P.percolation_graph.triples(\
                 (None,subject,None),context=data_context):
+            c(subject2,propertyfoo,object2)
             P.add((subject2,object_,object2),context=infered_context)
     c("finished subproperty reasoning")
     for subject, foo, object_ in P.percolation_graph.triples(\
             (None,NS.rdfs.domain,None),context=ontology_context):
-        for subject2,predicatefoo,objectfoo in P.percolation_graph(\
+        for subject2,predicatefoo,objectfoo in P.percolation_graph.triples(\
                 (None,subject,None),context=data_context):
             P.add((subject2,a,object_),context=infered_context)
     c("finished domain reasoning")
     for subject, foo, object_ in P.percolation_graph.triples(\
             (None,NS.rdfs.range,None),context=ontology_context):
-        for subjectfoo,predicatefoo,object2 in P.percolation_graph(\
+        for subjectfoo,predicatefoo,object2 in P.percolation_graph.triples(\
                 (None,subject,None),context=data_context):
                 P.add((object2,a,object_),context=infered_context)
     c("finished range reasoning")

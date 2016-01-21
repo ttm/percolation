@@ -28,8 +28,10 @@ def startSession(context="session"):
              (current_status_uri,NS.per.currentUser,current_user_uri),
              ]
     P.set_(triples,context=context) # from rdf.rdflib OK
-    P.rdf.minimumOntology() # from rdf.ontology
-    P.legacy.triples.datasets.datasets() # from legacy.triples
+    #P.rdf.minimumOntology() # from rdf.ontology
+    P.rdf.ontology.minimumTestOntology() # from rdf.ontology
+    #P.legacy.triples.datasets.datasets() # from legacy.triples
+    P.legacy.triples.datasets.minimalTestData() # from legacy.triples
     P.rdf.inference.rdfsInference("void","minimum_ontology","session_legacy_metadata") # from rdf.inference
     # by this point, one should have the named graphs/contexts:
     # session, minimum_ontology, legacy_metadata, session_legacy_metadata

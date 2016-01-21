@@ -6,6 +6,14 @@ def percolationSystem():
     triples=[
             (NS.per.CurrentStatus, a, NS.per.SystemStatus)
             ]
+def minimumTestOntology(context="minimum_ontology"):
+    triples=[
+            (NS.fb.FacebookSnapshot,NS.rdfs.subClassOf,NS.po.Snapshot),
+            (NS.fb.user,NS.rdfs.range,NS.po.Participant),
+            (NS.fb.ego,NS.rdfs.domain,NS.po.FacebookSnapshot),
+            (NS.fb.userID,NS.rdfs.subPropertyOf,NS.po.ID),
+            ]
+    P.add(triples,context=context)
 def minimumOntology(context="minimum_ontology"):
     triples=rdfsTriples()
     if context=="triples":
