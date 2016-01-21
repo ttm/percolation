@@ -48,16 +48,29 @@ def timestampedURI(uriref=None,stringid="",datetime_=None):
     sid=stringid+datetime_.isoformat()
     newuriref=uriref+"#"+sid
     return newuriref
-def get(subject=None,predicate=None,object_=None,context_=None,percolation_graph=None):
+def get(subject=None,predicate=None,object_=None,context=None,percolation_graph=None):
     if not percolation_graph:
         percolation_graph=P.percolation_graph
-    contexts=[i for i in context(percolation_graph=percolation_graph)]
-    if context_ and (context_ not in contexts):
+    contexts=[i for i in context_(percolation_graph=percolation_graph)]
+    if context and (context not in contexts):
         c("context",context,"not existent, get will return empty")
-    triples=[triple for triple in percolation_graph.triples((subject,predicate,object_),context_)]
+    triples=[triple for triple in percolation_graph.triples((subject,predicate,object_),context)]
     if len(triples)==1: # only one triple
         triples=triples[0]
     return triples
+
+def remove(triples=None,context=None,percolation_graph=None):
+    if not percolation_graph:
+        percolation_graph=P.percolation_graph
+    contexts=[i for i in context_(percolation_graph=percolation_graph)]
+    if context and (context not in contexts):
+        c("context",context,"not existent, will not remove triple")
+    else:
+        if not triples:
+            triples=[(None,None,None)]
+        for triple in triples:
+            percolation_graph.remove(triple,context=context)
+
 def add(triples,context=None,percolation_graph=None):
     if isinstance(triples[0],(r.URIRef,r.Namespace)):
         triples=[triples]
@@ -75,15 +88,17 @@ def context(context=None,command=None,percolation_graph=None):
         percolation_graph=P.percolation_graph
     if not context:
         graphlist=[i for i in percolation_graph.contexts()]
-        c("no context in P.context(), return context:",graphlist)
+        c("no context in P.context(), return contexts list:",graphlist)
         return graphlist
     elif command==None:
         graph=percolation_graph.get_context(context)
         c("return context graph named",context,"ntriples: ",len(graph))
         return graph
     elif command=="remove":
-        percolation_graph.remove_context(context)
-        c("removed context: ", context,"return none")
+        percolation_graph.remove_context(context_(context))
+        c("tryed to removed context (not working): ", context,"return none")
+context_=context
+    
 def set_(triples,context=None,percolation_graph=None):
     if not percolation_graph:
         percolation_graph=P.percolation_graph

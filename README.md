@@ -102,7 +102,8 @@ measures/\* for taking measures of social structures. It takes data and produces
 analysis/\* for deriving assertions from social structures (e.g. mean(token size) above mean of OLSD legacy. Same file tree as measures
 
 utils/\*.py
-  - status.py for navigating and modifying file structure
+  - general.py for general purpose utilities that fit nowhere else, e.g. randomNick
+  - status.py for 
   - file.py for navigating and modifying file structure
   - web/\* for integration to the WWW
 

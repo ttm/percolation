@@ -1,8 +1,8 @@
 from datetime import datetime
 from random import randint, choice
 from percolation.rdf import NS, a
-from string import ascii_lowercase
 import percolation as P
+from .general import randomNick
 c=P.check
 
 def startSession(context="session"):
@@ -35,13 +35,4 @@ def startSession(context="session"):
     P.rdf.inference.rdfsInferencePerform("void","minimum_ontology","session_legacy_metadata") # from rdf.inference
     # by this point, one should have the named graphs/contexts:
     # session, minimum_ontology, legacy_metadata, session_legacy_metadata
-def randomNick():
-    vowels="aeiouy"
-    consonants="".join(i for i in ascii_lowercase if i not in vowels)
-    nsyllables=randint(5,10)
-    nick="".join(i for j in range(nsyllables) for i in (choice(consonants),choice(vowels)))
-    if randint(0,1):
-        nick=choice(vowels)+nick
-    return nick
-
 
