@@ -1,5 +1,4 @@
 from datetime import datetime
-from random import randint, choice
 from percolation.rdf import NS, a
 import percolation as P
 from .general import randomNick
@@ -8,6 +7,7 @@ c=P.check
 def startSession(context="session"):
     current_user_uri=P.get(NS.per.currentUser) # from rdf.rdflib OK
     now=datetime.now()
+    P.context("session","remove")
     if not current_user_uri:
         nick=randomNick() # OK
         current_user_uri=P.rdf.timestampedURI(NS.per.Participant,nick,now) # rdf.rdflib OK
