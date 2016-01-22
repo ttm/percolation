@@ -1,4 +1,4 @@
-from .bootstrap import start, close, check
+from .bootstrap import start, close, check, QUIET
 from . import utils
 from . import legacy
 from . import rdf

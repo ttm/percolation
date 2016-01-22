@@ -8,10 +8,10 @@ def percolationSystem():
             ]
 def minimumTestOntology(context="minimum_ontology"):
     triples=[
-            (NS.fb.FacebookSnapshot,NS.rdfs.subClassOf,NS.po.Snapshot),
+            (NS.po.FacebookSnapshot,NS.rdfs.subClassOf,NS.po.Snapshot),
             (NS.fb.user,NS.rdfs.range,NS.po.Participant),
             (NS.fb.ego,NS.rdfs.domain,NS.po.FacebookSnapshot),
-            (NS.fb.userID,NS.rdfs.subPropertyOf,NS.po.ID),
+            (NS.fb.userID,NS.rdfs.subPropertyOf,NS.po.userID),
             ]
     P.add(triples,context=context)
 def minimumOntology(context="minimum_ontology"):
