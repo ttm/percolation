@@ -35,6 +35,9 @@ Underline is used only in variable names where the words in variable name make s
 
 The code is the documentation. Code should be very readable to avoid writing unnecessary documentation and duplicating routine representations. This adds up to using docstrings to give context to the objects or omitting the docstrings.
 
+Tasks might have c("some status message") which are printed with time interval in seconds between P.check calls.
+These messages are turned of by setting P.QUIET=True or calling P.silence() which just sets P.QUIET=True
+
 The usual variables in scripts are: P for percolation, NS for P.rdf.NS for namespace, a for NS.rdf.type, c for P.utils.check, S for social, M for music, V for visuals, n for numpy, p for pylab, r for rdflib, x for networkx
 
 The file cureimport.py in newtests avoids cluttering the header of the percolation file while hacking framework. In using the Python interpreter, subsequent runs of scripts don't reload or raise error with importlib if the prior error was on load. Justo load it first: import cureimport, percolation as P, etc.
@@ -68,6 +71,7 @@ legacy/\* for standard usage outlines, analyses and media rendering from legacy 
   - datasets.py for triples on the datasets of open linked social data with local and remote filenames
   - linksets.py for triples that link datasets (e.g. irc:Participant#hybrid po:sameAs fb:Participant#renato.fabbri)
   - enrichments.py for hand notes and other structures for enrichment of the percolation status (be traslated to rdf)
+  - notes.py for hand notes and other structures for enrichment of the percolation status (be traslated to rdf)
   - software.py for triples of software and ontologies pertinent to percolation environment
 
 rdf/\* for rdf data managing
