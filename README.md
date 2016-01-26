@@ -40,7 +40,7 @@ These messages are turned of by setting P.QUIET=True or calling P.silence() whic
 
 The usual variables in scripts are: P for percolation, NS for P.rdf.NS for namespace, a for NS.rdf.type, c for P.utils.check, S for social, M for music, V for visuals, n for numpy, p for pylab, r for rdflib, x for networkx
 
-The file cureimport.py in newtests avoids cluttering the header of the percolation file while hacking framework. In using the Python interpreter, subsequent runs of scripts don't reload or raise error with importlib if the prior error was on load. Justo load it first: import cureimport, percolation as P, etc.
+The file cureimport.py in newtests avoids cluttering the header of the percolation file while hacking framework. In using the Python interpreter, subsequent runs of scripts don't reload or raise error with importlib if the prior error was on load. Just load it first: import cureimport, percolation as P, etc.
 
 The variable P.percolation\_graph is a ConjunctiveGraph with all execution state information metadata and translates and with each variable value as value, a bag (unordered, e.g. word sizes) or a collection (ordered, principal components, etc).
 
@@ -131,6 +131,15 @@ In the integrated measures, see if networks that have peculiar distribution of m
 
 Are there benchmark datasets and results for the statistics used in percolation? If so, integrate them into legacy.statistics.tests.
 Otherwise, make benchmarks from synthesized and empirical data.
+
+Percolation makes use of other packages designed for percolation for direct use or through the rendered RDF they deliver.
+These are:
+- The social package for rendering RDF data from social networking platforms and protocols (e.g. facebook, twitter, irc, instagram, noosfero, diaspora)
+- The gmane package for rendering RDF data from public Gmane email lists (e.g. apache, c++ stdlib)
+- The participation package for rendering RDF data from social participation platforms (e.g. participabr, cidade democratica, aa)
+- The scientific package (ToDo) for rendering RDF data from scientific resources such as FAPESP
+- The music package to render music from open linked social data
+- The visuals package to render images and movies from open linked social data
 
 See legacy.triples for further notes.
 

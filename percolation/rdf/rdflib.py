@@ -24,7 +24,8 @@ class NS:
     ot  =    r.Namespace("http://purl.org/socialparticipation/ot/")  # ontology of the thesis, for academic conceptualizations
     po = r.Namespace("http://purl.org/socialparticipation/po/") # the participation ontology, this framework itself
     per = r.Namespace("http://purl.org/socialparticipation/per/") # percolation, this framework itself
-    fb  =    r.Namespace("http://purl.org/socialparticipation/fb/")  # facebook
+    social = r.Namespace("http://purl.org/socialparticipation/social/") # percolation, this framework itself
+    facebook  =    r.Namespace("http://purl.org/socialparticipation/facebook/")  # facebook
     tw  =    r.Namespace("http://purl.org/socialparticipation/tw/")  # twitter
     irc =    r.Namespace("http://purl.org/socialparticipation/irc/") # irc
     gmane =  r.Namespace("http://purl.org/socialparticipation/gmane/") # gmane
@@ -51,9 +52,20 @@ def timestampedURI(uriref=None,stringid="",datetime_=None):
 def get(subject=None,predicate=None,object_=None,context=None,percolation_graph=None):
     if not percolation_graph:
         percolation_graph=P.percolation_graph
-    contexts=[i for i in context_(percolation_graph=percolation_graph)]
-    if context and (context not in contexts):
-        c("context",context,"not existent, get will return empty")
+    if isinstance(subject,(list,tuple)) and not predicate:
+        query=P.rdf.sparql.buildQuery(subject,graph1=context)
+        result=P.percolation_graph.query(query)
+        c(query)
+        result_=P.rdf.sparql.plainQueryValues(result)
+        if len(result_)==1: # only one triple:
+            result_=result_[0]
+        return result_
+        #return result
+    else:
+        subject=r.URIRef(subject)
+    contexts=[i.identifier for i in context_(percolation_graph=percolation_graph)]
+    if context and not any((context in i) for i in contexts):
+        raise ValueError("context "+context+" not existent, get will return empty")
     triples=[triple for triple in percolation_graph.triples((subject,predicate,object_),context)]
     if len(triples)==1: # only one triple
         triples=triples[0]
@@ -88,15 +100,15 @@ def context(context=None,command=None,percolation_graph=None):
         percolation_graph=P.percolation_graph
     if not context:
         graphlist=[i for i in percolation_graph.contexts()]
-        c("no context in P.context(), return contexts list:",graphlist)
+#        c("no context in P.context(), return contexts list:",graphlist)
         return graphlist
     elif command==None:
         graph=percolation_graph.get_context(context)
-        c("return context graph named",context,"ntriples: ",len(graph))
+#        c("return context graph named",context,"ntriples: ",len(graph))
         return graph
     elif command=="remove":
         percolation_graph.remove_context(context_(context))
-        c("tryed to removed context (not working): ", context,"return none")
+#        c("tryed to removed context (not working): ", context,"return none")
 context_=context
     
 def set_(triples,context=None,percolation_graph=None):
@@ -110,3 +122,64 @@ def set_(triples,context=None,percolation_graph=None):
         percolation_graph.remove(quad_)
         quad=(triple[0],triple[1],object_,context)
         percolation_graph.add(quad)
+
+def triplesScaffolding(subjects,predicates,objects,context=None):
+    """Link subject(s) through predicate(s) to subject(s).
+    
+    Accepts any combination of one and N triples in inputs, eg:
+      triplesScafolding(participants,NS.po.name,names) # N 1 N
+      triplesScafolding(participants,name_props,name) # N N 1
+      triplesScafolding(participant,name_pros,names) # 1 N N
+
+      triplesScafolding(participant, names_props,name) # 1 N 1
+      triplesScafolding(participant, NS.po.name,names) # 1 1 N
+      triplesScafolding(participants,NS.po.name,name) # N 1 1
+
+    Might be useful for rearanging lists into triples:
+      triplesScafolding(participants,name_props,names) # N N N
+      triplesScafolding(participant,NS.po.name,names) # 1 1 1"""
+    if isinstance(subjects,str):
+        subjects=r.URIRef(subjects)
+
+    N=max([len(subjects)  ,0]  [    isinstance(subjects,  (r.URIRef,r.Namespace))],
+          [len(predicates),0][      isinstance(predicates,(r.URIRef,r.Namespace))],
+          [len(objects)   ,0]   [   isinstance(objects,   (r.URIRef,r.Namespace))])
+    check=sum([((len(i)==N) or isinstance(i,(r.URIRef,r.Namespace))) for i in (subjects,predicates,objects)])==3
+    if not check:
+        raise ValueError("input should be a combination of loose URIs and lists of same size ")
+    triples=[]
+    if check==3:
+        for i, subject in enumerate(subjects):
+            predicate=predicates[i]
+            object_=objects[i]
+            triples+=[(subject,predicate,object_)]
+    else:
+        if isinstance(subjects,(r.URIRef,r.Namespace)):
+            subjects=[subjects]
+        if isinstance(predicates,(r.URIRef,r.Namespace)):
+            predicates=[predicates]
+        if isinstance(objects,(r.URIRef,r.Namespace)):
+            objects=[objects]
+        if len(subjects)==1:
+            subjects*=N
+        if len(predicates)==1:
+            predicates*=N
+        if len(objects)==1:
+            objects*=N
+        for subject,predicate,object_ in zip(subjects,predicates,objects):
+            triples+=[(subject, predicate, object_)]
+    if context=="return_triples":
+        return triples
+    P.add(triples,context=context)
+
+def ic(uriref,string,context=None,snapshoturi=None):
+    uri=uriref+"#"+string
+    triples=[
+            (uri,a,uriref),
+            ]
+    if snapshoturi:
+        triples+=[
+                 (uri,NS.po.snapshot,snapshoturi),
+                 ]
+    P.add(triples,context=context)
+    return uri

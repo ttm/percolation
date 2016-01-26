@@ -22,9 +22,10 @@ class PercolationServer:
         self.percolation_graph=percolation_graph
         P.percolation_server=self
 
-def start(): # duplicate in legacy/outlines.py
+def start(start_session=True): # duplicate in legacy/outlines.py
     PercolationServer()
-    P.utils.startSession()
+    if start_session:
+        P.utils.startSession()
 #    P.utils.aaSession()
 def close(): # duplicate in legacy/outlines.py
     P.percolation_graph.close()
