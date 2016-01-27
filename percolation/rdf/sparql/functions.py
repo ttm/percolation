@@ -143,11 +143,13 @@ def plainQueryValues(result_dict,join_queries=False):
             keys=sorted(result.keys())
             this_result=[]
             for key in keys:
-                value=result[key]
+                value=result[key].toPython()
                 this_result+=[value]
             results+=[this_result]
         if len(results) and len(keys)==1 and join_queries !="hard":
             results=[i[0] for i in results]
+        if len(results)==1:
+            results=results[0]
         return results
     else:
         for result in result_dict["results"]["bindings"]:
