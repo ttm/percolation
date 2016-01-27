@@ -49,25 +49,42 @@ def timestampedURI(uriref=None,stringid="",datetime_=None):
     sid=stringid+datetime_.isoformat()
     newuriref=uriref+"#"+sid
     return newuriref
-def get(subject=None,predicate=None,object_=None,context=None,percolation_graph=None):
+def get(subject=None,predicate=None,object_=None,context=None,percolation_graph=None,modifier1="",strict=False,minimized=False):
+    """Utility to get triples (or parts of them) by various criteria
+
+    strict=False will reduce triples to a single triple if there is only one match.
+    minimized=False witll return full triples, instead of only those that are not given for match.
+    """
     if not percolation_graph:
         percolation_graph=P.percolation_graph
     if isinstance(subject,(list,tuple)) and not predicate:
-        query=P.rdf.sparql.buildQuery(subject,graph1=context)
-        result=P.percolation_graph.query(query)
+        query=P.rdf.sparql.buildQuery(subject,graph1=context,modifier1=modifier1)
         c(query)
-        result_=P.rdf.sparql.plainQueryValues(result)
-        if len(result_)==1: # only one triple:
-            result_=result_[0]
-        return result_
-        #return result
+        result=P.percolation_graph.query(query)
+        triples=P.rdf.sparql.plainQueryValues(result)
     else:
-        subject=r.URIRef(subject)
-    contexts=[i.identifier for i in context_(percolation_graph=percolation_graph)]
-    if context and not any((context in i) for i in contexts):
-        raise ValueError("context "+context+" not existent, get will return empty")
-    triples=[triple for triple in percolation_graph.triples((subject,predicate,object_),context)]
-    if len(triples)==1: # only one triple
+        if subject:
+            subject=r.URIRef(subject)
+        contexts=[i.identifier for i in context_(percolation_graph=percolation_graph)]
+        if context and not any((context in i) for i in contexts):
+            raise ValueError("context "+context+" not existent, get will return empty")
+        triples=[triple for triple in percolation_graph.triples((subject,predicate,object_),context)]
+        if minimized==True:
+            parts=[bool(i) for i in (subject,predicate,object_)]
+            if sum(parts)==2:
+                index=parts.index(False)
+                item="i[{}]".format(index)
+            else:
+                item="("
+                if not subject:
+                    item+="i[0],"
+                if not predicate:
+                    item+="i[1],"
+                if not object_:
+                    item+="i[2]"
+                item+=")"
+            triples=[eval(item) for i in triples]
+    if len(triples)==1 and strict==False: # only one triple
         triples=triples[0]
     return triples
 
@@ -91,9 +108,12 @@ def add(triples,context=None,percolation_graph=None):
     quads=[]
     for triple in triples:
         object_=triple[2]
+        subject=triple[0]
         if not isinstance(object_,(r.URIRef,r.Namespace)):
            object_=r.Literal(object_)
-        quads+=[(triple[0],triple[1],object_,context)]
+        if not isinstance(subject,(r.URIRef,r.Namespace)):
+           subject=r.URIRef(subject)
+        quads+=[(subject,triple[1],object_,context)]
     percolation_graph.addN(quads)
 def context(context=None,command=None,percolation_graph=None):
     if not percolation_graph:
