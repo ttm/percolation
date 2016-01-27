@@ -49,6 +49,13 @@ def timestampedURI(uriref=None,stringid="",datetime_=None):
     sid=stringid+datetime_.isoformat()
     newuriref=uriref+"#"+sid
     return newuriref
+def query(querystring,strict=False):
+    """use get if using list of triples for data retrieval"""
+    result= P.percolation_graph.query(querystring)
+    triples=P.rdf.sparql.plainQueryValues(result)
+    if len(triples[0])==1 and strict==False: # only item per retrieval
+        triples=triples[0]
+
 def get(subject=None,predicate=None,object_=None,context=None,percolation_graph=None,modifier1="",strict=False,minimized=False):
     """Utility to get triples (or parts of them) by various criteria
 
@@ -86,6 +93,8 @@ def get(subject=None,predicate=None,object_=None,context=None,percolation_graph=
             triples=[eval(item) for i in triples]
     if len(triples)==1 and strict==False: # only one triple
         triples=triples[0]
+        if len(triples)==1: # if only one reference is being retrieved
+            triples=triples[0]
     return triples
 
 def remove(triples=None,context=None,percolation_graph=None):
