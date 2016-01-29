@@ -42,6 +42,7 @@ class NS:
     void =   r.namespace.VOID
     U=   r.URIRef
 a=NS.rdf.type
+po=NS.po
  
 def timestampedURI(uriref=None,stringid="",datetime_=None):
     if not datetime:
