@@ -148,7 +148,7 @@ def plainQueryValues(result_dict,join_queries=False):
             results+=[this_result]
         if len(results) and len(keys)==1 and join_queries !="hard":
             results=[i[0] for i in results]
-        if len(results)==1:
+        if len(results)==1 and join_queries!="list":
             results=results[0]
         return results
     else:

@@ -56,7 +56,7 @@ def query(querystring,strict=False):
     triples=P.rdf.sparql.plainQueryValues(result)
     return triples
 
-def get(subject=None,predicate=None,object_=None,context=None,percolation_graph=None,modifier1="",strict=False,minimized=False):
+def get(subject=None,predicate=None,object_=None,context=None,percolation_graph=None,modifier1="",strict=False,minimized=False,join_queries=False):
     """Utility to get triples (or parts of them) by various criteria
 
     strict=False will reduce triples to a single triple if there is only one match.
@@ -66,9 +66,9 @@ def get(subject=None,predicate=None,object_=None,context=None,percolation_graph=
         percolation_graph=P.percolation_graph
     if isinstance(subject,(list,tuple)) and not predicate:
         query=P.rdf.sparql.buildQuery(subject,graph1=context,modifier1=modifier1)
-        c(query)
+        #c(query)
         result=P.percolation_graph.query(query)
-        triples=P.rdf.sparql.plainQueryValues(result)
+        triples=P.rdf.sparql.plainQueryValues(result,join_queries=join_queries)
     else:
         if subject:
             subject=r.URIRef(subject)
