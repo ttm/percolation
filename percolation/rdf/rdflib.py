@@ -1,6 +1,7 @@
 from datetime import datetime
 import rdflib as r, percolation as P
 c=P.check
+U=r.URIRef
 def info():
    uri_chars="""reserved    = gen-delims / sub-delims
 gen-delims  = ":" / "/" / "?" / "#" / "[" / "]" / "@"
