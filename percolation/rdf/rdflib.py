@@ -1,5 +1,5 @@
 from datetime import datetime
-import rdflib as r, percolation as P, os
+import rdflib as r, percolation as P, os, rfc3986, urllib
 c=P.check
 U=r.URIRef
 def info():
@@ -201,9 +201,10 @@ def triplesScaffolding(subjects,predicates,objects,context=None):
     if context=="return_triples":
         return triples
     P.add(triples,context=context)
-
+import time
 def ic(uriref,string,context=None,snapshoturi=None):
-    uri=uriref+"#"+string
+    uri=uriref+"#"+urllib.parse.quote(string)
+    assert rfc3986.is_valid_uri(uri) # also rfc3986.normalize_uri
     triples=[
             (uri,a,uriref),
             ]
@@ -212,6 +213,9 @@ def ic(uriref,string,context=None,snapshoturi=None):
                  (uri,NS.po.snapshot,snapshoturi),
                  ]
     P.add(triples,context=context)
+    if not rfc3986.is_valid_uri(uri):
+        asd=asodha
+        #time.sleep(5)
     return uri
 
 def writeByChunks(filename="path/name_without_extension",context=None,format_="both",ntriples=100000,triples=None):
@@ -233,7 +237,7 @@ def writeByChunks(filename="path/name_without_extension",context=None,format_="b
            subject=r.URIRef(subject)
         g_.add((subject,triple[1],object_))
         triple_count+=1
-        if triple_count==ntriples:
+        if triple_count%ntriples==0:
             filename_="{}{:05d}".format(filename,chunk_count)
             filename_xml,filesize_xml,filename_ttl,filesize_ttl=write(filename_,graph=g_)
             filenames_xml+=[filename_xml]
@@ -255,17 +259,16 @@ def write(filename="path/name_without_extension",context=None,format_="both",gra
         g=context_(context)
     else:
         g=graph
-    c("starting serialization")
+    c("starting serialization of",len(graph),"triples into",filename)
     filenames_sizes=[]
     if format_ in ("both","xml","rdf"):
         filename_=filename+".rdf"
-        g.serialize(filename_,"xml"); c("xml")
+        g.serialize(filename_,"xml"); c("xml", filename_)
         filenames_sizes+=[filename_.split("/")[-1]]
         filenames_sizes+=[os.path.getsize(filename_)/10**6]
     if format_ in ("both","turtle","ttl"):
         filename_=filename+".ttl"
-        g.serialize(filename_,"turtle"); c("ttl")
+        g.serialize(filename_,"turtle"); c("ttl", filename_)
         filenames_sizes+=[filename_.split("/")[-1]]
         filenames_sizes+=[os.path.getsize(filename_)/10**6]
-    c("finished serialization")
     return filenames_sizes
