@@ -213,9 +213,6 @@ def ic(uriref,string,context=None,snapshoturi=None):
                  (uri,NS.po.snapshot,snapshoturi),
                  ]
     P.add(triples,context=context)
-    if not rfc3986.is_valid_uri(uri):
-        asd=asodha
-        #time.sleep(5)
     return uri
 
 def writeByChunks(filename="path/name_without_extension",context=None,format_="both",ntriples=100000,triples=None):
