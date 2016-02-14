@@ -203,7 +203,7 @@ def triplesScaffolding(subjects,predicates,objects,context=None):
     P.add(triples,context=context)
 import time
 def ic(uriref,string,context=None,snapshoturi=None):
-    uri=uriref+"#"+urllib.parse.quote(string)
+    uri=uriref+"#"+urllib.parse.quote(string,safe="")
     assert rfc3986.is_valid_uri(uri) # also rfc3986.normalize_uri
     triples=[
             (uri,a,uriref),
