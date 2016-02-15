@@ -1,7 +1,7 @@
 from datetime import datetime
 from string import ascii_lowercase
 from random import randint, choice
-import pickle
+import pickle, re
 def randomNick():
     vowels="aeiouy"
     consonants="".join(i for i in ascii_lowercase if i not in vowels)
@@ -40,3 +40,7 @@ def twitterReadPickleChunck(filename=None,tweets=[],fopen=None,ntweets=5000):
         except EOFError:
             break
     return tweets,f
+rstring="[{}]".format("".join(chr(i) for i in list(range(9))+list(range(11,32))+[127]))
+reclean=re.compile(rstring)
+def cleanText(text):
+    return reclean.sub(r"",text)
