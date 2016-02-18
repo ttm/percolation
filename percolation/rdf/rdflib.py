@@ -26,6 +26,7 @@ class NS:
     po = r.Namespace("http://purl.org/socialparticipation/po/") # the participation ontology, this framework itself
     per = r.Namespace("http://purl.org/socialparticipation/per/") # percolation, this framework itself
     social = r.Namespace("http://purl.org/socialparticipation/social/") # percolation, this framework itself
+    participation = r.Namespace("http://purl.org/socialparticipation/participation/") # percolation, this framework itself
     facebook  =    r.Namespace("http://purl.org/socialparticipation/facebook/")  # facebook
     tw  =    r.Namespace("http://purl.org/socialparticipation/tw/")  # twitter
     irc =    r.Namespace("http://purl.org/socialparticipation/irc/") # irc
