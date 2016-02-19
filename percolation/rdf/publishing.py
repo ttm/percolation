@@ -1,7 +1,11 @@
 from percolation.rdf import NS, po, a, c
 import percolation as P, numpy as n, nltk as k, os, re, datetime, shutil
 class TranslationPublishing:
-    def __init__(self,final_path="some_snapshots/",umbrella_dir=None,snapshotid):
+    """To be inherited by publishing classes in social, gmane and participation packages"""
+    def makeTranslation(self):
+        """Overwrite in subclasses"""
+        pass
+    def __init__(self,snapshotid,final_path="some_snapshots/",umbrella_dir=None):
         final_path_="{}{}/".format(final_path,snapshotid)
         if not umbrella_dir:
             umbrella_dir=final_path
@@ -65,14 +69,27 @@ class TranslationPublishing:
         self.desc+="isInteraction: {}.".format(self.isinteraction)
         self.nchecks=P.get(r"SELECT (COUNT(?checker) as ?cs) WHERE { ?foosession po:checkParticipant ?checker}",context=self.translation_graph)
         self.desc+="\nnParticipants: {}; nInteractions: {} (only session checks in first aa).".format(self.nparticipants,self.nchecks)
-        self.desc+="\nisPost: {} (alias hasText: {})".format(self.hastext,self.hastext)
+        self.desc+="\nalias hasText: {}".format(self.hastext)
         self.desc+="\nnMessages: {}; ".format(self.nmessages)
 
         self.desc+="\nnCharsOverall: {}; mCharsOverall: {}; dCharsOverall: {}.".format(self.totalchars,                    self.mchars_messages,     self.dchars_messages)
         self.desc+="\nnTokensOverall: {}; mTokensOverall: {}; dTokensOverall: {};".format(self.totaltokens,               self.mtokens_messages,    self.dtokens_messages)
         self.desc+="\nnSentencesOverall: {}; mSentencesOverall: {}; dSentencesOverall: {};".format(self.totalsentences,self.msentences_messages, self.dsentences_messages)
         self.desc+="\nnURLs: {}; nAAMessages {}.".format(self.nurls,self.nmessages)
+        self.dates=P.get(r"SELECT ?date WHERE { GRAPH <%s> { ?fooshout po:createdAt ?date } "%(self.translation_graph,))
+        self.desc+="\nReference timespan: {} to {}".format(min(dates),max(dates))
+        self.desc+="""\nRDF expression in the XML file(s):
+{}
+and the Turtle file(s):
+{}
+(anonymized: {}).""".format(self.translation_xml,self.translation_ttl,self.anonymized)
+        self.desc+="""\nMetadata of this snapshot in the XML file(s):
+{}
+and the Turtle file(s):
+{}.""".format(self.meta_xml,self.meta_ttl)
+        self.desc+="""\nFiles should be available in: \n{}""".format()
 
+        self.desc+="\n\nNote: numeric variables starting with n are countings, with m are means and d are standard deviations."
         if isinstance(self.translation_xml,list):
             P.rdf.triplesScaffolding(self.snapshoturi,
                     [po.translationXMLFilename]*len(self.translation_xml)+[po.translationTTLFilename]*len(self.translation_ttl),
@@ -124,24 +141,7 @@ class TranslationPublishing:
             os.mkdir(self.final_path_+"scripts")
         shutil.copy(PACKAGEDIR+"/../tests/triplify.py",self.final_path_+"scripts/triplify.py")
         # copia do base data
-        text="""structure in the RDF/XML file(s):
-{}
-and the Turtle file(s):
-{}
-(anonymized: False "nicks inteface").""".format( self.nparticipants,str(self.participantvars),
-                    self.nchecks,self.ndirect,self.nmention,
-                    self.translation_xml,
-                    self.translation_ttl)
-        tposts="""\n\nThe dataset consists of {} shout messages with metadata {}
-{:.3f} characters in average (std: {:.3f}) and total chars in snapshot: {}
-{:.3f} tokens in average (std: {:.3f}) and total tokens in snapshot: {}
-{:.3f} sentences in average (std: {:.3f}) and total sentences in snapshot: {}""".format(
-                        self.nmessages,str(self.messagevars),
-                        self.mcharsmessages, self.dcharsmessages,self.totalchars,
-                        self.mtokensmessages,self.dtokensmessages,self.totaltokens,
-                        self.msentencesmessages,self.dsentencesmessages,self.totalsentences,
-                        )
-        self.dates=P.get(r"SELECT ?date WHERE { GRAPH <%s> { ?fooshout po:createdAt ?date } "%(self.translation_graph,))
+
         self.dates=[i.isoformat() for i in self.dates]
         date1=min(self.dates)
         date2=max(self.dates)
