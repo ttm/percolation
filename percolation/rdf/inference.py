@@ -3,6 +3,7 @@ from .rdflib import NS
 a=NS.rdf.type
 c=P.check
 
+
 def performRdfsInference(data_context=None,ontology_context=None,inferred_context=None,clean_inferred_context=True):
     # clean inference graph if True
     if clean_inferred_context:

@@ -14,6 +14,7 @@ NOTE: URI is not split with "%"
 r.namespace.split_uri("http://purl.org/socialparticipation/irc/Participant#labMacambiraLaleniaLog1%2818")"""
 
 class NS:
+    test =     r.Namespace("http://purl.org/socialparticipation/test/")   # caixa mágica
     cm =     r.Namespace("http://purl.org/socialparticipation/cm/")   # caixa mágica
     obs =    r.Namespace("http://purl.org/socialparticipation/obs/") # ontology of the social library
     aa  =    r.Namespace("http://purl.org/socialparticipation/aa/")  # algorithmic autoregulation
@@ -31,7 +32,7 @@ class NS:
     tw  =    r.Namespace("http://purl.org/socialparticipation/tw/")  # twitter
     irc =    r.Namespace("http://purl.org/socialparticipation/irc/") # irc
     gmane =  r.Namespace("http://purl.org/socialparticipation/gmane/") # gmane
-    ld  =    r.Namespace("http://purl.org/socialparticipation/ld/")  # linkedin 
+    ld  =    r.Namespace("http://purl.org/socialparticipation/ld/")  # linkedin
     dbp  =    r.Namespace("http://dbpedia.org/resource/")
     rdf =    r.namespace.RDF
     rdfs =   r.namespace.RDFS
@@ -45,7 +46,7 @@ class NS:
     U=   r.URIRef
 a=NS.rdf.type
 po=NS.po
- 
+
 def timestampedURI(uriref=None,stringid="",datetime_=None):
     if not datetime:
         datetime_=datetime.now()
@@ -141,7 +142,7 @@ def context(context=None,command=None,percolation_graph=None):
         percolation_graph.remove_context(context_(context))
 #        c("tryed to removed context (not working): ", context,"return none")
 context_=context
-    
+
 def set_(triples,context=None,percolation_graph=None):
     if not percolation_graph:
         percolation_graph=P.percolation_graph
@@ -156,7 +157,7 @@ def set_(triples,context=None,percolation_graph=None):
 
 def triplesScaffolding(subjects,predicates,objects,context=None):
     """Link subject(s) through predicate(s) to subject(s).
-    
+
     Accepts any combination of one and N triples in inputs, eg:
       triplesScafolding(participants,NS.po.name,names) # N 1 N
       triplesScafolding(participants,name_props,name) # N N 1
