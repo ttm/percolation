@@ -1,92 +1,140 @@
-from percolation.rdf import NS, po, a, c
-import percolation as P, numpy as n, nltk as k, os, re, datetime, shutil
+import os
+import re
+import datetime
+import shutil
+import numpy as n
+import nltk as k
+from percolation.rdf import NS, po, c
+import percolation as P
+
+
 class TranslationPublishing:
-    """To be inherited by publishing classes in social, gmane and participation packages"""
+    """To be inherited by publishing classes in social,
+    gmane and participation packages"""
     def makeTranslation(self):
         """Overwrite in subclasses"""
         pass
-    def __init__(self,snapshotid,final_path="some_snapshots/",umbrella_dir=None):
-        final_path_="{}{}/".format(final_path,snapshotid)
+
+    def __init__(self, snapshotid, final_path="some_snapshots/",
+                 umbrella_dir=None):
+        final_path_ = "{}{}/".format(final_path, snapshotid)
         if not umbrella_dir:
-            umbrella_dir=final_path
-        online_prefix="https://raw.githubusercontent.com/OpenLinkedSocialData/{}master/{}/".format(umbrella_dir,snapshotid)
+            umbrella_dir = final_path
+        online_prefix = \
+            "https://raw.githubusercontent.com/OpenLinkedSocialData/\
+            {}master/{}/".format(umbrella_dir, snapshotid)
         if not os.path.isdir(final_path):
             os.mkdir(final_path)
         if not os.path.isdir(final_path_):
             os.mkdir(final_path_)
-        size_chars_overall=[]; size_tokens_overall=[]; size_sentences_overall=[]
-        locals_=locals().copy(); del locals_["self"]
+        size_chars_overall = []
+        size_tokens_overall = []
+        size_sentences_overall = []
+        locals_ = locals().copy()
+        del locals_["self"]
         for i in locals_:
-            exec("self.{}={}".format(i,i))
+            exec("self.{}={}".format(i, i))
+
+    def makePostsTriples(self):
+        if not self.hastext:
+            return
+        self.totalchars = sum(self.size_chars_overall)
+        self.mchars_messages = n.mean(self.size_chars_overall)
+        self.dchars_messages = n.std(self.size_chars_overall)
+        self.totaltokens = sum(self.size_tokens_overall)
+        self.mtokens_messages = n.mean(self.size_tokens_overall)
+        self.dtokens_messages = n.std(self.size_tokens_overall)
+        self.totalsentences = sum(self.size_sentences_overall)
+        self.msentences_messages = n.mean(self.size_sentences_overall)
+        self.dsentences_messages = n.std(self.size_sentences_overall)
+        self.nmessages = P.get(
+            "SELECT (COUNT(?s) as ?s) WHERE { ?s a po:Message }",
+            context=self.translation_graph)
+        self.nparticipants = P.get(
+            "SELECT (COUNT(?s) as ?s) WHERE { ?s a po:Participant }",
+            context=self.translation_graph)
+        self.nurls = P.get(
+            "SELECT (COUNT(?s) as ?s) WHERE { ?s po:hasUrl ?o }",
+            context=self.translation_graph)
+        triples = [
+             (self.snapshoturi, po.nParticipants,     self.nparticipants),
+             (self.snapshoturi, po.nMessages,         self.nmessages),
+             (self.snapshoturi, po.nCharsOverall,     self.totalchars),
+             (self.snapshoturi, po.mCharsOverall,     self.mchars_messages),
+             (self.snapshoturi, po.dCharsOverall,     self.dchars_messages),
+             (self.snapshoturi, po.nTokensOverall,    self.totaltokens),
+             (self.snapshoturi, po.mTokensOverall,    self.mtokens_messages),
+             (self.snapshoturi, po.dTokensOverall,    self.dtokens_messages),
+             (self.snapshoturi, po.nSentencesOverall, self.totalsentences),
+             (self.snapshoturi, po.mSentencesOverall, self.msentences_messages),
+             (self.snapshoturi, po.dSentencesOverall, self.dsentences_messages),
+             ]
+        P.add(triples, context=self.meta_graph)
+
     def makeMetadata(self):
-        self.totalchars=sum(                self.size_chars_overall)
-        self.mchars_messages=n.mean(        self.size_chars_overall)
-        self.dchars_messages=n.std(         self.size_chars_overall)
-        self.totaltokens=sum(              self.size_tokens_overall)
-        self.mtokens_messages=n.mean(      self.size_tokens_overall)
-        self.dtokens_messages=n.std(       self.size_tokens_overall)
-        self.totalsentences=sum(        self.size_sentences_overall)
-        self.msentences_messages=n.mean(self.size_sentences_overall)
-        self.dsentences_messages=n.std( self.size_sentences_overall)
-        self.nmessages=P.get("SELECT (COUNT(?s) as ?s) WHERE { ?s a po:Message }",context=self.translation_graph)
-        self.nparticipants=P.get("SELECT (COUNT(?s) as ?s) WHERE { ?s a po:Participant }",context=self.translation_graph)
-        self.nurls=P.get("SELECT (COUNT(?s) as ?s) WHERE { ?s po:hasUrl ?o }",context=self.translation_graph)
-        triples=[
-                (self.snapshoturi, po.nParticipants,     self.nparticipants),
-                (self.snapshoturi, po.nMessages,         self.nmessages),
-                (self.snapshoturi, po.nCharsOverall,     self.totalchars),
-                (self.snapshoturi, po.mCharsOverall,     self.mchars_messages),
-                (self.snapshoturi, po.dCharsOverall,     self.dchars_messages),
-                (self.snapshoturi, po.nTokensOverall,    self.totaltokens),
-                (self.snapshoturi, po.mTokensOverall,    self.mtokens_messages),
-                (self.snapshoturi, po.dTokensOverall,    self.dtokens_messages),
-                (self.snapshoturi, po.nSentencesOverall, self.totalsentences),
-                (self.snapshoturi, po.mSentencesOverall, self.msentences_messages),
-                (self.snapshoturi, po.dSentencesOverall, self.dsentences_messages),
-                ]
-        P.add(triples,context=self.meta_graph)
+        self.makePostsTriples()
         # get participant and message vars from snapshot through queries
-        participantvars=P.get("""SELECT DISTINCT ?p WHERE { GRAPH <%s> { 
-?fooparticipant po:snapshot <%s> . 
-?fooparticipant a po:Participant . 
-?fooparticipant ?p ?fooobject . } } """%(self.translation_graph,self.snapshoturi))
-        P.rdf.triplesScaffolding(self.snapshoturi,
-                [po.ParticipantAttribute]*len(self.participantvars),
-                self.participantvars,context=self.meta_graph)
-        messagevars=P.get("""SELECT DISTINCT ?p WHERE { GRAPH <%s> { 
-?foomessage po:snapshot <%s> . 
-?foomessage a po:Message . 
-?foomessage ?p ?fooobject . } } """%(self.translation_graph,self.snapshoturi))
-        P.rdf.triplesScaffolding(self.snapshoturi,
+        self.participantvars = P.get("""SELECT DISTINCT ?p WHERE { GRAPH <%s> {
+                                  ?fooparticipant po:snapshot <%s> .
+                                  ?fooparticipant a po:Participant .
+                                  ?fooparticipant ?p ?fooobject . } } """ % (
+                                self.translation_graph, self.snapshoturi))
+        P.rdf.triplesScaffolding(
+            self.snapshoturi,
+            [po.ParticipantAttribute]*len(self.participantvars),
+            self.participantvars, context=self.meta_graph)
+        self.messagevars = P.get("""SELECT DISTINCT ?p WHERE { GRAPH <%s> {
+                               ?foomessage po:snapshot <%s> .
+                               ?foomessage a po:Message .
+                               ?foomessage ?p ?fooobject . } } """ % (
+                                   self.translation_graph, self.snapshoturi))
+        P.rdf.triplesScaffolding(
+                self.snapshoturi,
                 [po.MessageAttribute]*len(self.messagevars),
-                self.messagevars,context=self.meta_graph)
+                self.messagevars, context=self.meta_graph)
 
-        self.mrdf=self.snapshotid+"Meta.rdf"
-        self.mttl=self.snapshotid+"Meta.ttl"
-        self.desc="irc dataset with snapshotID: {}\nsnapshotURI: {} \nisEgo: {}. isGroup: {}.".format(
-                                                self.snapshotid,self.snapshoturi,self.isego,self.isgroup,)
-        self.desc+="\nisFriendship: {}; ".format(self.isfriendship)
-        self.desc+="isInteraction: {}.".format(self.isinteraction)
-        self.nchecks=P.get(r"SELECT (COUNT(?checker) as ?cs) WHERE { ?foosession po:checkParticipant ?checker}",context=self.translation_graph)
-        self.desc+="\nnParticipants: {}; nInteractions: {} (only session checks in first aa).".format(self.nparticipants,self.nchecks)
-        self.desc+="\nalias hasText: {}".format(self.hastext)
-        self.desc+="\nnMessages: {}; ".format(self.nmessages)
-
-        self.desc+="\nnCharsOverall: {}; mCharsOverall: {}; dCharsOverall: {}.".format(self.totalchars,                    self.mchars_messages,     self.dchars_messages)
-        self.desc+="\nnTokensOverall: {}; mTokensOverall: {}; dTokensOverall: {};".format(self.totaltokens,               self.mtokens_messages,    self.dtokens_messages)
-        self.desc+="\nnSentencesOverall: {}; mSentencesOverall: {}; dSentencesOverall: {};".format(self.totalsentences,self.msentences_messages, self.dsentences_messages)
-        self.desc+="\nnURLs: {}; nAAMessages {}.".format(self.nurls,self.nmessages)
-        self.dates=P.get(r"SELECT ?date WHERE { GRAPH <%s> { ?fooshout po:createdAt ?date } "%(self.translation_graph,))
-        self.desc+="\nReference timespan: {} to {}".format(min(dates),max(dates))
-        self.desc+="""\nRDF expression in the XML file(s):
+        self.mrdf = self.snapshotid+"Meta.rdf"
+        self.mttl = self.snapshotid+"Meta.ttl"
+        self.desc = "dataset with snapshotID:\
+            {}\nsnapshotURI: {} \nisEgo: {}. isGroup: {}.".format(
+            self.snapshotid, self.snapshoturi, self.isego, self.isgroup)
+        self.desc += "\nisFriendship: {}; ".format(self.isfriendship)
+        self.desc += "isInteraction: {}.".format(self.isinteraction)
+        self.desc += "\nhasText: {}".format(self.hastext)
+        self.nchecks = P.get(r"SELECT (COUNT(?checker) as ?cs) WHERE { \
+                             ?foosession po:checkParticipant ?checker}",
+                             context=self.translation_graph)
+        self.desc += "\nnParticipants: {}; nInteractions: {} \
+            (only session checks in first aa).".format(
+                self.nparticipants, self.nchecks)
+        self.desc += "\nnMessages: {}; ".format(self.nmessages)
+        self.desc += "\nnCharsOverall: {}; mCharsOverall: {};\
+            dCharsOverall: {}.".format(self.totalchars, self.mchars_messages,
+                                       self.dchars_messages)
+        self.desc += "\nnTokensOverall: {}; mTokensOverall: {};\
+            dTokensOverall: {};".format(self.totaltokens, self.mtokens_messages,
+                                        self.dtokens_messages)
+        self.desc += "\nnSentencesOverall: {}; mSentencesOverall: {};\
+            dSentencesOverall: {};".format(
+                self.totalsentences, self.msentences_messages,
+                self.dsentences_messages)
+        self.desc += "\nnURLs: {}; nAAMessages {}.".format(
+            self.nurls, self.nmessages)
+        self.dates = P.get(r"SELECT ?date WHERE { GRAPH <%s> {\
+                           ?fooshout po:createdAt ?date } " % (
+                               self.translation_graph,))
+        self.desc += "\nReference timespan: {} to {}".format(
+            min(dates), max(dates))
+        self.desc += """\nRDF expression in the XML file(s):
 {}
 and the Turtle file(s):
 {}
-(anonymized: {}).""".format(self.translation_xml,self.translation_ttl,self.anonymized)
-        self.desc+="""\nMetadata of this snapshot in the XML file(s):
+(anonymized: {}).""".format(self.translation_xml, self.translation_ttl,
+                            self.anonymized)
+        self.desc += """\nMetadata of this snapshot in the XML file(s):
 {}
 and the Turtle file(s):
-{}.""".format(self.meta_xml,self.meta_ttl)
+{}.""".format(self.meta_xml, self.meta_ttl)
         self.desc+="""\nFiles should be available in: \n{}""".format()
 
         self.desc+="\n\nNote: numeric variables starting with n are countings, with m are means and d are standard deviations."
