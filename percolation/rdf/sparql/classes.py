@@ -80,7 +80,7 @@ class SparQLQueries:
 
     def insertTriples(self, triples, graph1=default):
         querystring = P.rdf.sparql.functions.buildQuery(triples, graph1=graph1,
-                                                    method="insert")
+                                                        method="insert")
         self.iquery += [querystring]
         self.result = self.updateQuery(querystring)
 
@@ -118,10 +118,16 @@ class SparQLQueries:
 
     def getNTriples(self, graph1=default):
         qtriples = (("?s", "?p", "?o"),)
-        self.ntriples = P.sparql.functions.plainQueryValues(
+        self.ntriples = P.rdf.sparql.functions.plainQueryValues(
             self.retrieveFromTriples(
                 qtriples, graph1=graph1, startB_=" (COUNT(*) as ?nt) WHERE { ")
         )[0]
+        return self.ntriples
+    def getNGraphs(self):
+        query=r"SELECT (COUNT(?g) as ?cg) WHERE { GRAPH ?g {} }"
+        self.ngraphs = self.retrieveQuery(
+            query)["results"]["bindings"][0]["cg"]["value"]
+        return self.ngraphs
 
     def insertOntology(self, graph1=default):
         self.insertTriples(P.rdf.makeOntology(), graph1=graph1)

@@ -9,9 +9,9 @@ def percolationSystem():
 def minimumTestOntology(context="minimum_ontology"):
     triples=[
             (NS.po.FacebookSnapshot,NS.rdfs.subClassOf,NS.po.Snapshot),
-            (NS.fb.user,NS.rdfs.range,NS.po.Participant),
-            (NS.fb.ego,NS.rdfs.domain,NS.po.FacebookSnapshot),
-            (NS.fb.userID,NS.rdfs.subPropertyOf,NS.po.userID),
+            (NS.facebook.user,NS.rdfs.range,NS.po.Participant),
+            (NS.facebook.ego,NS.rdfs.domain,NS.po.FacebookSnapshot),
+            (NS.facebook.userID,NS.rdfs.subPropertyOf,NS.po.userID),
             ]
     P.add(triples,context=context)
 def minimumOntology(context="minimum_ontology"):
@@ -32,7 +32,7 @@ def rdfsTriples():
             (NS.po.onlineMetaTTLFile, NS.rdfs.subPropertyOf, NS.void.dataDump),
             (NS.po.MetaXMLFilename,   NS.rdfs.subPropertyOf, NS.void.dataDump),
             (NS.po.MetaTTLFilename,   NS.rdfs.subPropertyOf, NS.void.dataDump),
-                       
+
             (NS.po.onlineInteractionXMLFile,NS.rdfs.subPropertyOf, NS.void.dataDump),
             (NS.po.onlineinteractionTTLFile,NS.rdfs.subPropertyOf, NS.void.dataDump),
             (NS.po.interactionXMLFilename,  NS.rdfs.subPropertyOf, NS.void.dataDump),
@@ -40,12 +40,12 @@ def rdfsTriples():
             ]
     return triples
 
-def participantRDFSStructure(): # participant 
+def participantRDFSStructure(): # participant
     triples=[
             (NS.po.Participant, NS.rdfs.subClassOf, NS.foaf.Person),
-            (NS.gmane.Participant,NS.rdfs.subClassOf,NS.po.Participant), 
-            (NS.fb.Participant,NS.rdfs.subClassOf,NS.po.Participant), 
-            (NS.tw.Participant,NS.rdfs.subClassOf,NS.po.Participant),  
+            (NS.gmane.Participant,NS.rdfs.subClassOf,NS.po.Participant),
+            (NS.facebook.Participant,NS.rdfs.subClassOf,NS.po.Participant),
+            (NS.tw.Participant,NS.rdfs.subClassOf,NS.po.Participant),
             ]
     return triples
 
@@ -80,17 +80,17 @@ def idRDFSStructure():
     # Mas IDs podem existir para grupos e pessoas, pois se repetem em datasets diferentes
     triples=[
             (NS.gmane.gmaneID, NS.rdfs.subPropertyOf, NS.po.auxID),
-            (NS.fb.groupID, NS.rdfs.subPropertyOf, NS.po.auxID),
+            (NS.facebook.groupID, NS.rdfs.subPropertyOf, NS.po.auxID),
 
-            (NS.fb.ID, NS.rdfs.subPropertyOf,NS.po.ID),
+            (NS.facebook.ID, NS.rdfs.subPropertyOf,NS.po.ID),
             (NS.po.numericID, NS.rdfs.subPropertyOf,NS.po.ID),
             (NS.po.stringID, NS.rdfs.subPropertyOf,NS.po.ID),
             (NS.po.auxID, NS.rdfs.subPropertyOf,NS.po.ID),
 
-            (NS.fb.numericID,NS.rdfs.subPropertyOf,NS.fb.ID),
-            (NS.fb.numericID,NS.rdfs.subPropertyOf,NS.po.numericID),
-            (NS.fb.stringID, NS.rdfs.subPropertyOf,NS.fb.ID),
-            (NS.fb.stringID, NS.rdfs.subPropertyOf,NS.po.stringID),
+            (NS.facebook.numericID,NS.rdfs.subPropertyOf,NS.facebook.ID),
+            (NS.facebook.numericID,NS.rdfs.subPropertyOf,NS.po.numericID),
+            (NS.facebook.stringID, NS.rdfs.subPropertyOf,NS.facebook.ID),
+            (NS.facebook.stringID, NS.rdfs.subPropertyOf,NS.po.stringID),
 
             (NS.gmane.stringID,NS.rdfs.subPropertyOf,NS.po.stringID),
             (NS.gmane.email,   NS.rdfs.subPropertyOf,NS.gmane.stringID),
@@ -109,7 +109,7 @@ def fileRDFSStructure():
     return triples
 def graphRDFStructure():
     triples=[
-            (NS.po.MetaNamedGraph, NS.rdfs.subClassOf,NS.po.NamedGraph), 
+            (NS.po.MetaNamedGraph, NS.rdfs.subClassOf,NS.po.NamedGraph),
             (NS.po.TranslationNamedGraph, NS.rdfs.subClassOf, NS.po.NamedGraph),
 
             (NS.po.metaGraph , NS.rdfs.subPropertyOf,NS.po.namedGraph), # fb
@@ -120,44 +120,44 @@ def graphRDFStructure():
     return triples
 def messageRDFSStructure():
     triples=[
-            (NS.gmane.Message,NS.rdfs.subClassOf,NS.po.Message), 
-            (NS.tw.Message,NS.rdfs.subClassOf,NS.po.Message), 
-            (NS.po.Message,NS.rdfs.subClassOf,NS.po.InteractionInstance), 
+            (NS.gmane.Message,NS.rdfs.subClassOf,NS.po.Message),
+            (NS.tw.Message,NS.rdfs.subClassOf,NS.po.Message),
+            (NS.po.Message,NS.rdfs.subClassOf,NS.po.InteractionInstance),
             ]
 def interactionRDFSStructure():
     triples=[
-            (NS.fb.Interaction,NS.rdfs.subClassOf,NS.po.InteractionInstance), 
-            (NS.gmane.Response,NS.rdfs.subClassOf,NS.po.InteractionInstance), 
-            (NS.gmane.Retweet,NS.rdfs.subClassOf,NS.po.InteractionInstance), 
+            (NS.facebook.Interaction,NS.rdfs.subClassOf,NS.po.InteractionInstance),
+            (NS.gmane.Response,NS.rdfs.subClassOf,NS.po.InteractionInstance),
+            (NS.gmane.Retweet,NS.rdfs.subClassOf,NS.po.InteractionInstance),
 
-            (NS.fb.nInterations, NS.rdfs.subPropertyOf,NS.fb.nRelations),
+            (NS.facebook.nInterations, NS.rdfs.subPropertyOf,NS.facebook.nRelations),
             ]
     return triples
 def friendshipRDFSStructure():
     triples=[
-            (NS.fb.friendOf,NS.rdfs.subPropertyOf,NS.po.friendOf),
+            (NS.facebook.friendOf,NS.rdfs.subPropertyOf,NS.po.friendOf),
             (NS.participa.friendOf,NS.rdfs.subPropertyOf,NS.po.friendOf),
 
-            (NS.fb.nFriendships, NS.rdfs.subPropertyOf,NS.fb.nRelations),
+            (NS.facebook.nFriendships, NS.rdfs.subPropertyOf,NS.facebook.nRelations),
             ]
     return triples
 def friendshipOWLStructure():
     triples=[
-            (NS.fb.friendOf,a,NS.owl.SymmetricProperty), 
+            (NS.facebook.friendOf,a,NS.owl.SymmetricProperty),
             ]
     return triples
 def participantRelationRDFStructure():
     triples=[
-            (NS.fb.nRelations, NS.rdfs.subPropertyOf,NS.po.nRelations),
+            (NS.facebook.nRelations, NS.rdfs.subPropertyOf,NS.po.nRelations),
             ]
     triples+=friendshipRDFSStructure()+interactionRDFSStructure()
     return triples
 
 def anonymizationRDFSStructure():
     triples=[
-            (NS.fb.anonymized, NS.rdfs.subPropertyOf,NS.po.anonymized),
-            (NS.fb.friendshipsAnonymized, NS.rdfs.subPropertyOf,NS.fb.anonymized),
-            (NS.fb.interactionssAnonymized, NS.rdfs.subPropertyOf,NS.fb.anonymized),
+            (NS.facebook.anonymized, NS.rdfs.subPropertyOf,NS.po.anonymized),
+            (NS.facebook.friendshipsAnonymized, NS.rdfs.subPropertyOf,NS.facebook.anonymized),
+            (NS.facebook.interactionssAnonymized, NS.rdfs.subPropertyOf,NS.facebook.anonymized),
             ]
     return triples
 

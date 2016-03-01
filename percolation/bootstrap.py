@@ -1,4 +1,5 @@
 import percolation as P
+import rdflib as r
 import os
 import time
 from rdflib import ConjunctiveGraph
@@ -23,10 +24,18 @@ class PercolationServer:
         P.percolation_server = self
 
 
-def start(start_session=True):  # duplicate in legacy/outlines.py
+endpoint_url_ = os.getenv("PERCOLATION_ENDPOINT")
+
+
+def start(start_session=True, endpoint_url=endpoint_url_):
+    """Startup routine"""
     PercolationServer()
     if start_session:
         P.utils.startSession()
+    if endpoint_url:
+        P.client = P.rdf.sparql.Client(endpoint_url)
+    else:
+        P.client = None
 #    P.utils.aaSession()
 
 
@@ -47,3 +56,21 @@ def check(*args):
         if args[0] == "prompt":
             input("ANY KEY TO CONTINUE")
 QUIET = False
+c = check
+
+if __name__ == "__main__":
+    start()
+    rdflibok = isinstance(P.percolation_graph, r.ConjunctiveGraph)
+    ntriples = len(P.percolation_graph)
+    c("rdflib in P.percolation_graph:", rdflibok, "ntriples:", ntriples)
+    if endpoint_url_:
+        ntriples = P.client.getNTriples()
+        ngraphs = P.client.getNGraphs()
+        c("connected to endpoint:", endpoint_url_, "with {} graphs \
+          and {} triples".format(ngraphs, ntriples))
+    else:
+        c("not connected to any remote endpoint\n\
+          (relying only on rdflib percolation_graph)")
+    choice = input("print triples (y/N)")
+    if choice == "y":
+        c(P.client.getAllTriples())
