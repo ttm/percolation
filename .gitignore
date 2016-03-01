@@ -4,3 +4,4 @@ ipython_log.py
 *.pyo
 *.swp
 percolation.egg-info
+*.ropeproject

@@ -135,27 +135,41 @@ and the Turtle file(s):
 {}
 and the Turtle file(s):
 {}.""".format(self.meta_xml, self.meta_ttl)
-        self.desc+="""\nFiles should be available in: \n{}""".format()
+        self.desc += """\nFiles should be available in: \n{}""".format()
 
-        self.desc+="\n\nNote: numeric variables starting with n are countings, with m are means and d are standard deviations."
-        if isinstance(self.translation_xml,list):
-            P.rdf.triplesScaffolding(self.snapshoturi,
-                    [po.translationXMLFilename]*len(self.translation_xml)+[po.translationTTLFilename]*len(self.translation_ttl),
-                    self.translation_xml+self.translation_ttl,context=self.meta_graph)
-            P.rdf.triplesScaffolding(self.snapshoturi,
-                    [po.onlineTranslationXMLFileURI]*len(self.translation_xml)+[po.onlineTranslationTTLFileURI]*len(self.translation_ttl),
-                    [self.online_prefix+i for i in self.translation_xml+self.translation_ttl],context=self.meta_graph)
-            triples=[
-                    (self.snapshoturi,po.translationXMLFilesize,self.translation_size_xml),
-                    (self.snapshoturi,po.translationTTLFilesize,self.translation_size_ttl),
-                    ]
+        self.desc += "\n\nNote: numeric variables starting with n area \
+            countings, with m are means and d are standard deviations."
+        if isinstance(self.translation_xml, list):
+            P.rdf.triplesScaffolding(
+                self.snapshoturi,
+                [po.translationXMLFilename]*len(self.translation_xml) +
+                [po.translationTTLFilename]*len(self.translation_ttl),
+                self.translation_xml+self.translation_ttl,
+                context=self.meta_graph)
+            P.rdf.triplesScaffolding(
+                self.snapshoturi,
+                [po.onlineTranslationXMLFileURI]*len(self.translation_xml) +
+                [po.onlineTranslationTTLFileURI]*len(self.translation_ttl),
+                [self.online_prefix+i for i in
+                 self.translation_xml+self.translation_ttl],
+                context=self.meta_graph)
+            triples = [
+                (self.snapshoturi, po.translationXMLFilesize,
+                 self.translation_size_xml),
+                (self.snapshoturi, po.translationTTLFilesize,
+                 self.translation_size_ttl),
+                      ]
         else:
-            triples=[
-                    (self.snapshoturi,po.translationXMLFilename,self.translation_xml),
-                    (self.snapshoturi,po.translationXMLFilesize,self.translation_size_xml),
-                    (self.snapshoturi,po.translationTTLFilename,self.translation_ttl),
-                    (self.snapshoturi,po.translationTTLFilesize,self.translation_size_ttl),
-                    ]
+            triples = [
+                      (self.snapshoturi, po.translationXMLFilename,
+                       self.translation_xml),
+                      (self.snapshoturi, po.translationXMLFilesize,
+                       self.translation_size_xml),
+                      (self.snapshoturi, po.translationTTLFilename,
+                       self.translation_ttl),
+                      (self.snapshoturi, po.translationTTLFilesize,
+                       self.translation_size_ttl),
+                      ]
         P.add(triples,self.meta_graph)
         triples=[
                 (self.snapshoturi, po.triplifiedIn,      datetime.datetime.now()),
