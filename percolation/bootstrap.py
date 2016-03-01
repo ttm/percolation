@@ -29,13 +29,14 @@ endpoint_url_ = os.getenv("PERCOLATION_ENDPOINT")
 
 def start(start_session=True, endpoint_url=endpoint_url_):
     """Startup routine"""
-    PercolationServer()
-    if start_session:
-        P.utils.startSession()
+    c("eu", endpoint_url)
     if endpoint_url:
         P.client = P.rdf.sparql.Client(endpoint_url)
     else:
         P.client = None
+    PercolationServer()
+    if start_session:
+        P.utils.startSession()
 #    P.utils.aaSession()
 
 
@@ -71,6 +72,13 @@ if __name__ == "__main__":
     else:
         c("not connected to any remote endpoint\n\
           (relying only on rdflib percolation_graph)")
+    choice = input("print graphs (y/N)")
+    if choice == "y":
+        graphs = P.client.getAllGraphs()
+        ntriples_ = []
+        for graph in graphs:
+            ntriples_ += [P.client.getNTriples(graph)]
+        c(list(zip(ntriples_, graphs)))
     choice = input("print triples (y/N)")
     if choice == "y":
         c(P.client.getAllTriples())

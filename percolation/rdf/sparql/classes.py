@@ -27,9 +27,10 @@ from SPARQLWrapper import SPARQLWrapper, JSON
 from percolation.rdf import NS
 c = P.check
 
-default = "urn:x-arq:DefaultGraph"
 default = NS.po.MainGraph+"#1"
 default = "default"
+default = "urn:x-arq:DefaultGraph"
+default = None
 g = r.Graph()
 # g.addN(P.rdf.makeMetadata())
 
@@ -65,7 +66,8 @@ class SparQLQueries:
 
     def clearEndpoint(self, tgraph=default):
         if tgraph:
-            query = "CLEAR GRAPH <%s>" % (tgraph,)
+            query = r"CLEAR GRAPH <%s>" % (tgraph,)
+            query = r"DROP GRAPH <%s> " % (tgraph,)
         else:
             query = "CLEAR DEFAULT"
         self.updateQuery(query)
@@ -123,6 +125,12 @@ class SparQLQueries:
                 qtriples, graph1=graph1, startB_=" (COUNT(*) as ?nt) WHERE { ")
         )[0]
         return self.ntriples
+    def getAllGraphs(self):
+        query=r"SELECT ?g WHERE { GRAPH ?g {} }"
+        self.graphs= P.rdf.sparql.functions.plainQueryValues(
+            self.retrieveQuery(query)
+        )
+        return self.graphs
     def getNGraphs(self):
         query=r"SELECT (COUNT(?g) as ?cg) WHERE { GRAPH ?g {} }"
         self.ngraphs = self.retrieveQuery(

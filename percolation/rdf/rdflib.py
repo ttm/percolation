@@ -1,4 +1,5 @@
 from datetime import datetime
+import inspect
 import rdflib as r, percolation as P, os, rfc3986, urllib
 c=P.check
 U=r.URIRef
@@ -115,7 +116,11 @@ def remove(triples=None,context=None,percolation_graph=None):
 def add(triples,context=None,percolation_graph=None):
     if isinstance(triples[0],(r.URIRef,r.Namespace)):
         triples=[triples]
-    if not percolation_graph:
+    if not percolation_graph and P.client:
+        c("insert into remote endpoint")
+        P.client.insertTriples(triples,context)
+        return
+    elif not percolation_graph:
         percolation_graph=P.percolation_graph
     quads=[]
     for triple in triples:
@@ -214,7 +219,13 @@ def ic(uriref,string,context=None,snapshoturi=None):
         triples+=[
                  (uri,NS.po.snapshot,snapshoturi),
                  ]
-    P.add(triples,context=context)
+    frames = inspect.getouterframes(inspect.currentframe())
+    outer_frame = frames[1][0]
+    #c(outer_frame,dir(outer_frame),outer_frame.f_locals)
+    if "triples" in outer_frame.f_locals:
+        outer_frame.f_locals["triples"]+=triples
+    else:
+        P.add(triples,context=context)
     return uri
 
 def writeByChunks(filename="path/name_without_extension",context=None,format_="both",ntriples=100000,triples=None):
