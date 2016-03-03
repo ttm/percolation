@@ -117,7 +117,6 @@ def add(triples,context=None,percolation_graph=None):
     if isinstance(triples[0],(r.URIRef,r.Namespace)):
         triples=[triples]
     if not percolation_graph and P.client:
-        c("insert into remote endpoint")
         P.client.insertTriples(triples,context)
         return
     elif not percolation_graph:

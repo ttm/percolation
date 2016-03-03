@@ -69,6 +69,9 @@ class SparQLQueries:
             query = r"CLEAR GRAPH <%s>" % (tgraph,)
             query = r"DROP GRAPH <%s> " % (tgraph,)
         else:
+            graphs = self.getAllGraphs()
+            for graph in graphs:
+                self.clearEndpoint(graph.split("/")[-1])
             query = "CLEAR DEFAULT"
         self.updateQuery(query)
 
@@ -143,9 +146,12 @@ class SparQLQueries:
         # P.utils.writeTriples(self.triples,"{}dummy.ttl".format(triples_dir))
 
 
+endpoint_url_ = os.getenv("PERCOLATION_ENDPOINT")
+
+
 class Client(SparQLClient, SparQLQueries):
     """Class that holds sparql endpoint connection and convenienves for query"""
-    def __init__(self, endpoint_url):
+    def __init__(self, endpoint_url=endpoint_url_):
         SparQLClient.__init__(self, endpoint_url)
 
 
