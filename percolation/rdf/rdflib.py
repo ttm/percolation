@@ -101,35 +101,37 @@ def get(subject=None,predicate=None,object_=None,context=None,percolation_graph=
             triples=triples[0]
     return triples
 
-def remove(triples=None,context=None,percolation_graph=None):
+def remove(triples=None, context=None, percolation_graph=None):
     if not percolation_graph:
-        percolation_graph=P.percolation_graph
-    contexts=[i for i in context_(percolation_graph=percolation_graph)]
+        percolation_graph = P.percolation_graph
+    contexts = [i for i in context_(percolation_graph=percolation_graph)]
     if context and (context not in contexts):
-        c("context",context,"not existent, will not remove triple")
+        c("context", context, "not existent,  will not remove triple")
     else:
         if not triples:
-            triples=[(None,None,None)]
+            triples = [(None, None, None)]
         for triple in triples:
-            percolation_graph.remove(triple,context=context)
+            percolation_graph.remove(triple, context=context)
 
-def add(triples,context=None,percolation_graph=None):
-    if isinstance(triples[0],(r.URIRef,r.Namespace)):
-        triples=[triples]
+
+def add(triples, context=None, percolation_graph=None):
+    if isinstance(triples[0], (r.URIRef, r.Namespace)):
+        triples = [triples]
+    triples = [i for i in triples if i[2]]
     if not percolation_graph and P.client:
-        P.client.insertTriples(triples,context)
+        P.client.insertTriples(triples, context)
         return
     elif not percolation_graph:
-        percolation_graph=P.percolation_graph
-    quads=[]
+        percolation_graph = P.percolation_graph
+    quads = []
     for triple in triples:
-        object_=triple[2]
-        subject=triple[0]
-        if not isinstance(object_,(r.URIRef,r.Namespace)):
-           object_=r.Literal(object_)
-        if not isinstance(subject,(r.URIRef,r.Namespace)):
-           subject=r.URIRef(subject)
-        quads+=[(subject,triple[1],object_,context)]
+        object_ = triple[2]
+        subject = triple[0]
+        if not isinstance(object_, (r.URIRef, r.Namespace)):
+            object_ = r.Literal(object_)
+        if not isinstance(subject, (r.URIRef, r.Namespace)):
+            subject = r.URIRef(subject)
+        quads += [(subject, triple[1], object_, context)]
     percolation_graph.addN(quads)
 def context(context=None,command=None,percolation_graph=None):
     if not percolation_graph:

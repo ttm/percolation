@@ -43,7 +43,8 @@ def buildQuery(triples1,         graph1=default, modifier1="",
         tvars = []
         body = ""
         for line in triples1:
-            tvars += [i for i in line if str(i)[0] == "?" and "foo" not in i]
+            tvars += [i for i in line if str(i)[0] == "?" and
+                      "foo" not in i and " " not in i and i.count("?") == 1]
             body += formatQueryLine(line)
         tvars = P.utils.uniqueItems(tvars)
         tvars_string = (" %s "*len(tvars)) % tuple(tvars)
@@ -219,13 +220,18 @@ def formatQueryLine(triple):
         start = ""
         end = ""
     line = ""
+    if isinstance(triple[2], str) and len(triple[2]) == 1 and triple[2] == "?":
+        return ""
     for term in triple:
         if isinstance(term, (r.Namespace, r.URIRef)):
             line += " <%s> " % (term,)
-        elif (str(term)[0] == "?") or (str(term)[:2] == "_:") or\
+        elif (str(term)[0] == "?" and term.count("?") == 1 and
+              " " not in term[0]) or (str(term)[:2] == "_:") or\
                 "uri(" in str(term):
             line += " %s " % (term,)
-        elif isinstance(term, str) and term[0] != "?":
+        elif isinstance(term, str) and not (term[0] == "?" and
+                                            term.count("?") == 1 and
+                                            " " not in term):
             # line+=' '+repr(term)+' '
             # if "'" not in term:
             # term = term.replace('\\', "\\\\")
