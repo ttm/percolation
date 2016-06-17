@@ -1,10 +1,16 @@
 from datetime import datetime
 import inspect
-import rdflib as r, percolation as P, os, rfc3986, urllib
-c=P.check
-U=r.URIRef
+import os
+import rfc3986
+import urllib
+import rdflib as r
+import percolation as P
+c = P.check
+U = r.URIRef
+
+
 def info():
-   uri_chars="""reserved    = gen-delims / sub-delims
+    uri_chars = """reserved     =  gen-delims / sub-delims
 gen-delims  = ":" / "/" / "?" / "#" / "[" / "]" / "@"
 sub-delims  = "!" / "$" / "&" / "'" / "(" / ")"
             / "*" / "+" / "," / ";" / "="
@@ -12,7 +18,10 @@ unreserved  = ALPHA / DIGIT / "-" / "." / "_" / "~"
 https://tools.ietf.org/html/rfc3986#section-2
 
 NOTE: URI is not split with "%"
-r.namespace.split_uri("http://purl.org/socialparticipation/irc/Participant#labMacambiraLaleniaLog1%2818")"""
+r.namespace.split_uri("http://purl.org/socialparticipation/irc/\
+    Participant#labMacambiraLaleniaLog1%2818")"""
+    return uri_chars
+
 
 class NS:
     test =     r.Namespace("http://purl.org/socialparticipation/test/")   # caixa mágica
@@ -60,7 +69,7 @@ def query(querystring,strict=False):
     triples=P.rdf.sparql.plainQueryValues(result)
     return triples
 
-def get(subject=None,predicate=None,object_=None,context=None,percolation_graph=None,modifier1="",strict=False,minimized=False,join_queries=False):
+def get(subject=None, predicate=None, object_=None, context=None, percolation_graph=None, modifier1="", strict=False, minimized=False, join_queries=False):
     """Utility to get triples (or parts of them) by various criteria
 
     strict=False will reduce triples to a single triple if there is only one match.
@@ -71,7 +80,10 @@ def get(subject=None,predicate=None,object_=None,context=None,percolation_graph=
     if isinstance(subject,(list,tuple)) and not predicate:
         query=P.rdf.sparql.buildQuery(subject,graph1=context,modifier1=modifier1)
         #c(query)
-        result=P.percolation_graph.query(query)
+        if P.client:
+            result=P.client.retrieveQuery(query)
+        else:
+            result=P.percolation_graph.query(query)
         triples=P.rdf.sparql.plainQueryValues(result,join_queries=join_queries)
     else:
         if subject:
@@ -101,6 +113,7 @@ def get(subject=None,predicate=None,object_=None,context=None,percolation_graph=
             triples=triples[0]
     return triples
 
+
 def remove(triples=None, context=None, percolation_graph=None):
     if not percolation_graph:
         percolation_graph = P.percolation_graph
@@ -117,9 +130,11 @@ def remove(triples=None, context=None, percolation_graph=None):
 def add(triples, context=None, percolation_graph=None):
     if isinstance(triples[0], (r.URIRef, r.Namespace)):
         triples = [triples]
-    triples = [i for i in triples if i[2]]
+    # triples = [i for i in triples if i[2]]
     if not percolation_graph and P.client:
+        c('==>>> add to sparql endpoint')
         P.client.insertTriples(triples, context)
+        c('added')
         return
     elif not percolation_graph:
         percolation_graph = P.percolation_graph
@@ -134,6 +149,12 @@ def add(triples, context=None, percolation_graph=None):
         quads += [(subject, triple[1], object_, context)]
     percolation_graph.addN(quads)
 def context(context=None,command=None,percolation_graph=None):
+    if P.client:
+        if not context:
+            return P.client.getAllGraphs()
+        else:
+            # get all triples from the graph
+            return P.client.getAllTriples(context)
     if not percolation_graph:
         percolation_graph=P.percolation_graph
     if not context:
@@ -149,19 +170,21 @@ def context(context=None,command=None,percolation_graph=None):
 #        c("tryed to removed context (not working): ", context,"return none")
 context_=context
 
-def set_(triples,context=None,percolation_graph=None):
+
+def set_(triples, context=None, percolation_graph=None):
     if not percolation_graph:
-        percolation_graph=P.percolation_graph
+        percolation_graph = P.percolation_graph
     for triple in triples:
-        object_=triple[2]
-        if not isinstance(object_,(r.URIRef,r.Namespace)):
-           object_=r.Literal(object_)
-        quad_=(triple[0],triple[1],None,context)
+        object_ = triple[2]
+        if not isinstance(object_, (r.URIRef, r.Namespace)):
+            object_ = r.Literal(object_)
+        quad_ = (triple[0], triple[1], None, context)
         percolation_graph.remove(quad_)
-        quad=(triple[0],triple[1],object_,context)
+        quad = (triple[0], triple[1], object_, context)
         percolation_graph.add(quad)
 
-def triplesScaffolding(subjects,predicates,objects,context=None):
+
+def triplesScaffolding(subjects, predicates, objects, context=None):
     """Link subject(s) through predicate(s) to subject(s).
 
     Accepts any combination of one and N triples in inputs, eg:
@@ -176,57 +199,67 @@ def triplesScaffolding(subjects,predicates,objects,context=None):
     Might be useful for rearanging lists into triples:
       triplesScafolding(participants,name_props,names) # N N N
       triplesScafolding(participant,NS.po.name,names) # 1 1 1"""
-    if isinstance(subjects,str):
-        subjects=r.URIRef(subjects)
+    if isinstance(subjects, str):
+        subjects = r.URIRef(subjects)
 
-    N=max([len(subjects)  ,0]  [    isinstance(subjects,  (r.URIRef,r.Namespace))],
-          [len(predicates),0][      isinstance(predicates,(r.URIRef,r.Namespace))],
-          [len(objects)   ,0]   [   isinstance(objects,   (r.URIRef,r.Namespace))])
-    check=sum([((len(i)==N) or isinstance(i,(r.URIRef,r.Namespace))) for i in (subjects,predicates,objects)])==3
+    N = max([len(subjects), 0][isinstance(subjects, (r.URIRef, r.Namespace))],
+            [len(predicates), 0][isinstance(predicates, (r.URIRef, r.Namespace))],
+            [len(objects), 0][isinstance(objects, (r.URIRef, r.Namespace))])
+    check = sum([((len(i) == N) or isinstance(i, (r.URIRef, r.Namespace)))
+                 for i in (subjects, predicates, objects)]) == 3
     if not check:
         raise ValueError("input should be a combination of loose URIs and lists of same size ")
-    triples=[]
-    if check==3:
+    triples = []
+    if check == 3:
         for i, subject in enumerate(subjects):
-            predicate=predicates[i]
-            object_=objects[i]
-            triples+=[(subject,predicate,object_)]
+            predicate = predicates[i]
+            object_ = objects[i]
+            triples += [(subject, predicate, object_)]
     else:
-        if isinstance(subjects,(r.URIRef,r.Namespace)):
-            subjects=[subjects]
-        if isinstance(predicates,(r.URIRef,r.Namespace)):
-            predicates=[predicates]
-        if isinstance(objects,(r.URIRef,r.Namespace)):
-            objects=[objects]
-        if len(subjects)==1:
-            subjects*=N
-        if len(predicates)==1:
-            predicates*=N
-        if len(objects)==1:
-            objects*=N
-        for subject,predicate,object_ in zip(subjects,predicates,objects):
-            triples+=[(subject, predicate, object_)]
-    if context=="return_triples":
+        if isinstance(subjects, (r.URIRef, r.Namespace)):
+            subjects = [subjects]
+        if isinstance(predicates, (r.URIRef, r.Namespace)):
+            predicates = [predicates]
+        if isinstance(objects, (r.URIRef, r.Namespace)):
+            objects = [objects]
+        if len(subjects) == 1:
+            subjects *= N
+        if len(predicates) == 1:
+            predicates *= N
+        if len(objects) == 1:
+            objects *= N
+        for subject, predicate, object_ in zip(subjects, predicates, objects):
+            triples += [(subject, predicate, object_)]
+    if context == "return_triples":
         return triples
-    P.add(triples,context=context)
-import time
-def ic(uriref,string,context=None,snapshoturi=None):
-    uri=uriref+"#"+urllib.parse.quote(string,safe="")
-    assert rfc3986.is_valid_uri(uri) # also rfc3986.normalize_uri
-    triples=[
-            (uri,a,uriref),
+    # c(outer_frame,dir(outer_frame),outer_frame.f_locals)
+    # frames = inspect.getouterframes(inspect.currentframe())
+    # outer_frame = frames[1][0]
+    # if "triples" in outer_frame.f_locals:
+    #     outer_frame.f_locals["triples"]+=triples
+    # else:
+    #     P.add(triples,context=context)
+    P.add(triples, context=context)
+
+
+def ic(uriref, string, context=None, snapshoturi=None):
+    uri = uriref+"#"+urllib.parse.quote(string, safe="")
+    assert rfc3986.is_valid_uri(uri)  # also rfc3986.normalize_uri
+    triples = [
+            (uri, a, uriref),
             ]
     if snapshoturi:
-        triples+=[
-                 (uri,NS.po.snapshot,snapshoturi),
+        triples += [
+                 (uri, NS.po.snapshot, snapshoturi),
                  ]
-    frames = inspect.getouterframes(inspect.currentframe())
-    outer_frame = frames[1][0]
-    #c(outer_frame,dir(outer_frame),outer_frame.f_locals)
-    if "triples" in outer_frame.f_locals:
-        outer_frame.f_locals["triples"]+=triples
-    else:
-        P.add(triples,context=context)
+    # frames = inspect.getouterframes(inspect.currentframe())
+    # c(outer_frame,dir(outer_frame),outer_frame.f_locals)
+    # outer_frame = frames[1][0]
+    # if "triples" in outer_frame.f_locals:
+    #     outer_frame.f_locals["triples"]+=triples
+    # else:
+    #     P.add(triples,context=context)
+    P.add(triples,context=context)
     return uri
 
 def writeByChunks(filename="path/name_without_extension",context=None,format_="both",ntriples=100000,triples=None):
