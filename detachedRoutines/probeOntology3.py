@@ -1,15 +1,17 @@
 import pickle as pickle
 import time
-import string
 from SPARQLWrapper import SPARQLWrapper, JSON
 import rdflib as r
 import pygraphviz as gv
+import sys
+from percolation import c
 # import pylab as pl
-from percolation.rdf import a
 
 # variaveis principais:
 # classes (kk), props,
-# vizinhanca_ (de classes)
+# neighbors_ (de classes)
+
+# unir os nós de datatype iguais TTM
 
 T = time.time()
 U = r.URIRef
@@ -88,7 +90,7 @@ g.namespace_manager.bind("schema", "http://schema.org/")
 g.namespace_manager.bind("sioc", "http://rdfs.org/sioc/ns#")
 
 
-q = "SELECT DISTINCT ?o WHERE {?s rdf:type ?o}"
+q = "SELECT DISTINCT ?class WHERE {?s a ?class}"
 NOW = time.time()
 # sparql = SPARQLWrapper("http://200.144.255.210:8082/cd/query")
 sparql = SPARQLWrapper("http://localhost:3030/adbname/query")
@@ -97,7 +99,8 @@ sparql.setReturnFormat(JSON)
 results = sparql.query().convert()
 print("%.2f segundos para puxar todas as classes" %
       (time.time()-NOW,))
-classes = [i["o"]["value"] for i in results["results"]["bindings"] if "w3.org" not in i["o"]["value"]]
+classes = [i["class"]["value"] for i in results["results"]["bindings"] if "w3.org" not in i["class"]["value"]]
+trash = [i["class"]["value"] for i in results["results"]["bindings"] if "w3.org" in i["class"]["value"]]
 
 # 2) Obtem todas as propriedades
 # ?p where { ?s ?p ?o. }
@@ -121,20 +124,17 @@ props_ = [i.split("/")[-1] for i in props]
 # sujeito e como objeto. Anotar a propriedade e o tipo de dado
 # na ponta
 # guarda a estrutura de relacionamento da classe.
-vizinhanca = {}
-vizinhanca_ = {}
+neighbors = {}
+neighbors_ = {}
 for classe in classes:
     # res = fazQuery("SELECT DISTINCT ?p (datatype(?o) as ?do) WHERE { ?i a <%s> . ?i ?p ?o }"%(classe,))
     NOW = time.time()
     print("\n%s antecedente,  consequente: " % (classe.split("/")[-1], ))
-    ant = fazQuery("SELECT DISTINCT ?p ?cs (datatype(?s) as ?ds) WHERE { ?i a <%s> . ?s ?p ?i . OPTIONAL { ?s a ?cs . } }" % (classe, ))
+    ant = fazQuery("SELECT DISTINCT ?p ?cs WHERE { ?i a <%s> . ?s ?p ?i . ?s a ?cs . }" % (classe, ))
     ant_ = []
     for aa in ant:
         if "cs" in aa.keys():
             tobj = aa["cs"]["value"]
-            ant_.append((tobj, aa["p"]["value"]))
-        elif (("ds" in aa.keys()) and ("w3.org" not in aa["p"]["value"])):
-            tobj = aa["ds"]["value"]
             ant_.append((tobj, aa["p"]["value"]))
     cons = fazQuery("SELECT DISTINCT ?p ?co (datatype(?o) as ?do) WHERE { ?i a <%s> . ?i ?p ?o . OPTIONAL { ?o a ?co . } }" % (classe, ))
     cons_ = []
@@ -145,30 +145,31 @@ for classe in classes:
         elif (("do" in cc.keys()) and ("w3.org" not in cc["p"]["value"])):
             tobj = cc["do"]["value"]
             cons_.append((cc["p"]["value"], tobj))
-        elif "/mbox" in cc["p"]["value"]:
-            tobj = "XMLSchema#anyURI"
-            cons_.append((cc["p"]["value"], tobj))
-    vizinhanca[classe] = (ant, cons)
-    vizinhanca_[classe] = (ant_, cons_)
+        elif (("do" in cc.keys()) and ("w3.org" in cc["p"]["value"])):
+            c(cc["p"]["value"], tobj)  # to see what triple this is
+            sys.exit()
+    neighbors[classe] = (ant, cons)
+    neighbors_[classe] = (ant_, cons_)
 f = open("dumpVV.pickle", "wb")
-vv = (vizinhanca, vizinhanca_)
+vv = (neighbors, neighbors_)
 pickle.dump(vv, f)
 f.close()
 fo = open("dumpVV.pickle", "rb")
 vv_ = pickle.load(fo)
 fo.close()
 kk = vv_[1].keys()
-for tkey in kk:
+for tkey in kk:  # for each class
     cl = tkey
     cl_ = cl.split("/")[-1]
     print(cl_)
     ex = vv_[1][cl]
     A = gv.AGraph(directed=True)
-    A.graph_attr["label"] = ("classe: %s,  no namespace interno: http://purl.org/socialparticipation/ocd/" % (cl_, ))
-    for i in range(len(ex[0])):  # antecedentes
-        label = ex[0][i][0].split("/")[-1]
-        elabel = ex[0][i][1].split("/")[-1]
-        print(label,  elabel)
+    # A.graph_attr["label"] = ("classe: %s,  no namespace interno: http://purl.org/socialparticipation/ocd/" % (cl_, ))
+    A.graph_attr["label"] = ("class: %s" % (cl, ))
+    for i in range(len(ex[0])):  # antecedents
+        label = ex[0][i][0].split("/")[-1]  #  class
+        elabel = ex[0][i][1].split("/")[-1]  # predicate
+        print(label, elabel)
         A.add_node(label, style="filled")
         A.add_edge(label, cl_)
         e = A.get_edge(label, cl_)
@@ -176,9 +177,9 @@ for tkey in kk:
         n = A.get_node(label)
         n.attr['color'] = "#A2F3D1"
     print("\n\n")
-    for i in range(len(ex[1])):  # consequentes
-        label = ex[1][i][1].split("/")[-1]
-        elabel = ex[1][i][0].split("/")[-1]
+    for i in range(len(ex[1])):  # consequents
+        label = ex[1][i][1].split("/")[-1]  # class or datatype
+        elabel = ex[1][i][0].split("/")[-1]  # predicate
         print(elabel,  label)
         if "XMLS" in label:
             label_ = i
@@ -203,18 +204,17 @@ for tkey in kk:
 
 # 4) Faz estrutura geral e figura geral
 A = gv.AGraph(directed=True)
-A.graph_attr["label"] = "Diagrama geral da OCD no namespace interno: http://purl.org/socialparticipation/ocd/"
+A.graph_attr["label"] = "General diagram"
 ii = 1
-for tkey in kk:
+for tkey in kk:  # for each class
     cl_ = tkey.split("/")[-1]
-    if cl_ not in A.nodes():
-        A.add_node(cl_, style="filled")
-        n = A.get_node(cl_)
-        n.attr['color'] = "#A2F3D1"
+    A.add_node(cl_, style="filled")
+    n = A.get_node(cl_)
+    n.attr['color'] = "#A2F3D1"
     ex = vv_[1][tkey]
-    for i in range(len(ex[0])):
-        label = ex[0][i][0].split("/")[-1]
-        elabel = ex[0][i][1].split("/")[-1]
+    for i in range(len(ex[0])):  # for each antecedent
+        label = ex[0][i][0].split("/")[-1]  # class
+        elabel = ex[0][i][1].split("/")[-1]  # predicate
         print(elabel)
         if label not in A.nodes():
             A.add_node(label, style="filled")
@@ -224,11 +224,11 @@ for tkey in kk:
         e = A.get_edge(label, cl_)
         e.attr["label"] = elabel
     print("\n\n")
-    for i in range(len(ex[1])):
-        label = ex[1][i][1].split("/")[-1]
-        elabel = ex[1][i][0].split("/")[-1]
+    for i in range(len(ex[1])):  # for each consequent
+        label = ex[1][i][1].split("/")[-1]  # datatype of class
+        elabel = ex[1][i][0].split("/")[-1]  # predicate
         print(elabel, label)
-        if "XMLS" in label:
+        if "XMLS" in label:  # if datatype
             label_ = ii
             ii += 1
             color = "#FFE4AA"
@@ -245,8 +245,8 @@ for tkey in kk:
         e.attr["label"] = elabel
         e.attr["color"] = color
         e.attr["penwidth"] = 2
-A.draw("imgs/OCD.png", prog="twopi", args="-Granksep = 4")
-A.draw("imgs/OCD2.png", prog="dot", args="-Granksep = .4 -Gsize = '1000, 1000'")
+A.draw("imgs/OCD.png", prog="twopi", args="-Granksep=4")
+A.draw("imgs/OCD2.png", prog="dot", args="-Granksep=.4 -Gsize='1000, 1000'")
 print("Wrote geral")
 
 # 4.5) qualificar literais
@@ -266,7 +266,9 @@ G(ocd.followersCount, rdfs.subPropertyOf, ocd.counting)
 # para cada propriedade, ver o que incide no domínio e no âmbito.
 # Ao mesmo tempo, fazer os axiomas de classe
 
-# Também pode ser pulada esta etapa para simplificar ontologia e evitar incompatibilidades com bancos de dados atualizados e maiores detalhes dados pelos especialitas.
+# Também pode ser pulada esta etapa para simplificar ontologia e evitar
+# incompatibilidades com bancos de dados atualizados e maiores detalhes
+# dados pelos especialistas.
 # Abaixo estah o roteiro completo de observacao dos dados para extração das estruturas
 # básicas, axiomas de propriedade, restrições de classe e visualizações.
 
@@ -282,7 +284,7 @@ for prop in props:
     obj = fazQuery("SELECT DISTINCT ?co (datatype(?o) as ?do) WHERE { ?s <%s> ?o . OPTIONAL { ?o a ?co . } }" % (prop,))
     P[prop_] = (suj, obj)
     A = gv.AGraph(directed=True)
-    A.graph_attr["label"] = ("propriedade: %s, no namespace interno: http://purl.org/socialparticipation/ocd/" % (prop_,))
+    A.graph_attr["label"] = ("property: %s" % (prop,))
 #    A.add_node(1,style = "filled")
 #    A.add_node(2,style = "filled")
     A.add_edge(1, 2)
@@ -333,6 +335,7 @@ o.close()
 # Aplicando automaticamente os critérios de
 # range, domain, functional ou não
 for prop in props:
+    # check if functional with queries TTM
     if prop not in notFunctionalProperties_:
         G(U(prop), rdf.type, owl.functionalProperty)
     ant, cons = P_[prop.split("/")[-1]]
@@ -712,11 +715,11 @@ g.add((ouri, owl.versionInfo, r.Literal(u"0.01au")))
 g.add((ouri, dct.description, r.Literal(u"Ontologia do Cidade Democratica, levantada com base nos dados e para conectar com outras instâncias")))
 
 # 8.1) Escreve OWL, TTL e PNG
-f = open("OCD.owl","wb")
+f = open("OCD.owl", "wb")
 f.write(g.serialize())
 f.close()
-f = open("OCD.ttl","wb")
-f.write(g.serialize(format = "turtle"))
+f = open("OCD.ttl", "wb")
+f.write(g.serialize(format="turtle"))
 f.close()
 
 
