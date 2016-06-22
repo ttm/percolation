@@ -1,8 +1,10 @@
 import networkx as x
 import numpy as n
+import percolation as P
 __doc__ = "for topological measures"
 
 
+# @profile  # uncomment for lineprofiling
 def topologicalMeasures(gg=x.Graph()):
     """A detailed info about one graph.
 
@@ -24,30 +26,30 @@ def topologicalMeasures(gg=x.Graph()):
         in_strengths = gg.in_degree(weight="weight")
         out_strengths = gg.out_degree(weight="weight")
         strengths_ = list(strengths.values())
-    betweenness = x.betweenness.betweenness_centrality(gg)
-    if gg.is_directed():
         gg_ = gg.to_undirected()
     else:
         gg_ = gg
+    # betweenness = x.betweenness.betweenness_centrality(gg)
     clustering = x.clustering(gg_)
     clustering_ = list(clustering.values())
-    clustering_w = x.clustering(gg_, weight="weight")
-    clustering_w_ = list(clustering_w.values())
-    square_clustering = x.square_clustering(gg)
-    square_clustering_ = list(square_clustering.values())
+    # clustering_w = x.clustering(gg_, weight="weight")
+    # clustering_w_ = list(clustering_w.values())
+    # square_clustering = x.square_clustering(gg)
+    # square_clustering_ = list(square_clustering.values())
     transitivity = x.transitivity(gg)
     transitivity_u = x.transitivity(gg_)
-    closeness = x.closeness_centrality(gg)
-    closeness_ = list(closeness.values())
-    eccentricity = x.closeness_centrality(gg_)
-    eccentricity_ = list(eccentricity.values())
+    # closeness = x.closeness_centrality(gg)
+    # closeness_ = list(closeness.values())
+    # eccentricity = x.eccentricity(gg_)
+    # eccentricity_ = list(eccentricity.values())
     comp_ = max(x.connected_component_subgraphs(gg_), key=len)
-    diameter = x.diameter(comp_)
-    radius = x.radius(comp_)
-    nperiphery = len(x.periphery(comp_))
-    ncenter = len(x.center(comp_))
+    # eccentricity_comp = x.eccentricity(comp_)
+    # diameter = x.diameter(comp_, eccentricity_comp)
+    # radius = x.radius(comp_, eccentricity_comp)
+    # nperiphery = len(x.periphery(comp_, eccentricity_comp))
+    # ncenter = len(x.center(comp_, eccentricity_comp))
     size_component = comp_.number_of_nodes()
-    ashort_path_u = x.average_shortest_path_length(comp_)
+    # ashort_path_u = x.average_shortest_path_length(comp_)
     nnodes = gg.number_of_nodes()
     nedges = gg.number_of_edges()
     frac_connected = 100*comp_.number_of_nodes()/nnodes
@@ -80,12 +82,35 @@ def _overallMeasures(topom_dict):
     network_measures = "nnodes", "nedges", "prob", "max_degree_empirical", "transitivity", "transitivity_u", "diameter", "radius", "frac_connected", "size_component", "ashort_path", "ashort_path_u", "ashort_path_w", "ashort_path_uw", "ncenter", "nperiphery", "frac_strongly_connected", "frac_weakly_connected",
     sector_measures = "sectorialized_nagents__",
     sector_vertex_measures = "sectorialized_degrees__",
-    data_ = [(n.mean(topom_dict[i]), n.std(topom_dict[i])) for i in vertex_measures]
+    data_ = [(n.mean(topom_dict[i]), n.std(topom_dict[i])) for i in vertex_measures if i in topom_dict]
     data = [i for j in data_ for i in j]
-    data += [max(topom_dict[i]) for i in max_measures]
-    data += [topom_dict[i] for i in network_measures]
-    data_ = [(n.mean(topom_dict[i][j]), n.std(topom_dict[i][j])) for i in sector_vertex_measures for j in range(3)]
-    data += [i for j in data_ for i in j]
-    data += [topom_dict[i][j] for i in sector_vertex_measures for j in range(3)]
-    del data_, topom_dict
+    data += [max(topom_dict[i]) for i in max_measures if i in topom_dict]
+    data += [topom_dict[i] for i in network_measures if i in topom_dict]
+    # data_ = [(n.mean(topom_dict[i][j]), n.std(topom_dict[i][j])) for i in sector_vertex_measures for j in range(3)]
+    # data += [i for j in data_ for i in j]
+    # data += [topom_dict[i][j] for i in sector_vertex_measures for j in range(3)]
+    # del data_, topom_dict
+    del topom_dict
     return locals()
+
+if __name__ == '__main__':
+    # profiling with:
+    # kernprof -l directMeasures.py
+    # and then
+    # python3 -m line_profiler directMeasures.py.lprof
+    prefix = 'PREFIX po: <http://purl.org/socialparticipation/po/>\n'
+    client = P.rdf.sparql.classes.LegacyClient('http://127.0.0.1:3030/adbname')
+    snapshots = P.rdf.sparql.functions.plainQueryValues(client.retrieveQuery(prefix+'SELECT DISTINCT ?snap WHERE { ?s po:snapshot ?snap }'))
+    for snapshot in snapshots[2:3]:
+        q = '''SELECT ?friend1 ?friend2 WHERE {{
+                ?friendshipfoo po:snapshot <{}> .
+                ?friendshipfoo a po:Friendship .
+                ?friendshipfoo po:member ?friend1 .
+                ?friendshipfoo po:member ?friend2 .
+                }}
+        '''.format(snapshot, )
+        friends = P.rdf.sparql.functions.plainQueryValues(client.retrieveQuery(prefix+q))
+        g = x.Graph()
+        for friend1, friend2 in friends:
+            g.add_edge(friend1, friend2)
+        topom_dict = P.measures.topology.directMeasures.topologicalMeasures(g)

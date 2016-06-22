@@ -167,7 +167,7 @@ for tkey in kk:  # for each class
     # A.graph_attr["label"] = ("classe: %s,  no namespace interno: http://purl.org/socialparticipation/ocd/" % (cl_, ))
     A.graph_attr["label"] = ("class: %s" % (cl, ))
     for i in range(len(ex[0])):  # antecedents
-        label = ex[0][i][0].split("/")[-1]  #  class
+        label = ex[0][i][0].split("/")[-1]  # class
         elabel = ex[0][i][1].split("/")[-1]  # predicate
         print(label, elabel)
         A.add_node(label, style="filled")
@@ -336,6 +336,7 @@ o.close()
 # range, domain, functional ou não
 for prop in props:
     # check if functional with queries TTM
+    # SELECT DISTINCT (COUNT(?o) as ?co) WHERE { ?s <prop> ?o } GROUP BY ?s
     if prop not in notFunctionalProperties_:
         G(U(prop), rdf.type, owl.functionalProperty)
     ant, cons = P_[prop.split("/")[-1]]

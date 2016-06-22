@@ -28,9 +28,15 @@ for snapshot in snapshots:
         g.add_edge(friend1, friend2)
     gg.append(g)
 
+analises = []
 for g in gg:
     print(g.number_of_nodes(), g.number_of_edges())
+    ###########
     # topological analysis
     # direct measures ok
-    # erdos sectors
+    # erdos sectors ok
     # scale free similarity
+    topom_dict = P.measures.topology.directMeasures.topologicalMeasures(g)
+    sectors = P.measures.topology.erdosSectors.getErdosSectors(topom_dict)
+    scale_free = P.measures.topology.powerLawFit.fitNetwork(topom_dict)
+    analises.append((topom_dict, sectors, scale_free))
