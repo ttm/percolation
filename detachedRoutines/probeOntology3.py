@@ -336,8 +336,9 @@ o.close()
 # range, domain, functional ou não
 for prop in props:
     # check if functional with queries TTM
-    # SELECT DISTINCT (COUNT(?o) as ?co) WHERE { ?s <prop> ?o } GROUP BY ?s
-    if prop not in notFunctionalProperties_:
+    query = 'SELECT DISTINCT (COUNT(?o) as ?co) WHERE { ?s <%s> ?o } GROUP BY ?s' % (prop,)
+    is_functional = fazQuery(query)['results']['bindings']
+    if len(is_functional) == 1 and is_functional[0]['value'] == 1:
         G(U(prop), rdf.type, owl.functionalProperty)
     ant, cons = P_[prop.split("/")[-1]]
     if len(cons) and ("XMLS" in cons[0]):
@@ -407,7 +408,8 @@ for classe in classes:
         query4 = "SELECT DISTINCT ?s WHERE { ?s <%s> ?o .}" % (pc,)
         inds3 = fazQuery(query4)
         inds3_ = [i["s"]["value"] for i in inds3]
-        if len(inds_) == len(inds3_):
+        # if len(inds_) == len(inds3_):
+        if set(inds_) == set(inds3_):
             print("%s, %s universal" % (classe, pc))
             b_ = r.BNode()
             G(U(classe), rdfs.subClassOf, b_)
