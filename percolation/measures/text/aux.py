@@ -1,4 +1,23 @@
+import os
+import pickle
+import string
 import numpy as n
+import nltk as k
+
+STOPWORDS = set(k.corpus.stopwords.words('english'))
+
+wn = k.corpus.wordnet
+
+tpath = os.path.abspath(__file__).replace(os.path.basename(__file__), '')
+if 'words.txt' not in os.listdir('.'):
+    print('downloading english words list')
+    os.system('wget https://raw.githubusercontent.com/dwyl/english-words/master/words.txt {}words.txt'.format(tpath))
+    print('finished download')
+with open(tpath + 'words.txt') as f:
+    WORDLIST = set(f.read())
+
+f = open(tpath+"brill_taggerT2M1", "rb")
+brill_tagger = pickle.load(f)
 
 
 def mediaDesvio2(adict={"stringkey": "strings_list"}):
@@ -24,3 +43,40 @@ def mediaDesvio(adict={"stringkey": "strings_list"}, tids=("astring", "bstring")
         measures_dict["d"+tid] = n.std(lengths)
         lengths_dict["L"+tid] = lengths
     return measures_dict, lengths_dict
+
+
+def textFromAuthors(author_messages, sectorialized_agents):
+    authors = set([i[0] for i in author_messages])
+    authors_texts = {}
+    for author in authors:
+        authors_texts[author] = []
+    for author, text in author_messages:
+        authors_texts[author] += [text]
+    return authors_texts
+
+
+def filtro(pos_tagged_words_lowercase):
+    """faz separação dos tokens para analise com wordnet TTM"""
+    stopword_sem_synset = []
+    stopword_com_synset = []
+    token_com_synset = []
+    token_sem_synset = []
+    pontuacao = []
+    token_exotico = []
+    for pos_tagged_word in pos_tagged_words_lowercase:
+        synset = wn.synsets(pos_tagged_word[0])
+        if synset:
+            if pos_tagged_word[0] in STOPWORDS:
+                stopword_com_synset.append(pos_tagged_word)
+            else:
+                token_com_synset.append((pos_tagged_word[0], pos_tagged_word[1], synset))
+        elif sum([tt in string.punctuation for tt in pos_tagged_word[0]]) == len(pos_tagged_word[0]):
+            pontuacao.append(pos_tagged_word)
+        elif pos_tagged_word[0] in STOPWORDS:
+            stopword_sem_synset.append(pos_tagged_word)
+        elif pos_tagged_word[0] in WORDLIST:
+            token_sem_synset.append(pos_tagged_word)
+        else:
+            token_exotico.append(pos_tagged_word)
+    del pos_tagged_word, synset, pos_tagged_words_lowercase
+    return locals()

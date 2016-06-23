@@ -4,14 +4,14 @@ __doc__ = "functions for analysis of text by isolated functionalities \
         or analysis and rendering roadmaps"
 
 
-def measureAll(authors_texts, sectorialized_agents):
+def measureAll(authors_messages, sectorialized_agents):
     """Overall text analysis routine, uses all resources
 
     Uses: P.text.aux.textFromAuthors()
           P.text.aux.textFromSectors()
     Used by: P.renderLegacy.topologicalTextualCharacterization.Analysis()
     """
-    authors_texts = P.text.aux.textFromAuthors(authors_texts, sectorialized_agents)
+    authors_texts = P.measures.text.aux.textFromAuthors(authors_messages, sectorialized_agents)
     authors_measures = {}
     # análise de cada mensagem e de cada autor
     for author in authors_texts:

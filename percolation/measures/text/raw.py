@@ -1,20 +1,13 @@
 import numpy as n
 import time
 import string
-import os
 import nltk as k
 import percolation as P
+from percolation.measures.text.aux import WORDLIST, STOPWORDS
 c = P.c
 
 wn = k.corpus.wordnet
 STOPWORDS = set(k.corpus.stopwords.words('english'))
-tpath = os.path.abspath(__file__).replace(os.path.basename(__file__), '')
-if 'words.txt' not in os.listdir('.'):
-    print('downloading english words list')
-    os.system('wget https://raw.githubusercontent.com/dwyl/english-words/master/words.txt {}words.txt'.format(tpath))
-    print('finished download')
-with open(tpath + 'words.txt') as f:
-    WORDLIST = set(f.read())
 
 __doc__ = "analysis of chars, tokens, sentences and messages"
 
@@ -320,7 +313,7 @@ def sentenceFracs(strings):
 
 
 def medidasMensagens(texts_list):
-    """Medidas das mensagens em si"""
+    """Medidas das mensagens em si DEPRECATED? TTM"""
     tokens_messages = [k.tokenize.wordpunct_tokenize(t) for t in texts_list]  # tokens
     known_words_messages = [[i for i in toks if (i not in STOPWORDS) and (i in WORDLIST)] for toks in tokens_messages]
     stopwords_messages = [[i for i in toks if i in STOPWORDS] for toks in tokens_messages]
