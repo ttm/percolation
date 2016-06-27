@@ -35,6 +35,7 @@ def sectorializeAgents(sectorialized_degrees, agent_degrees):
                       if agent_degrees[x] in sectorialized_degrees[1]]
     hubs = [x for x in agent_degrees
             if agent_degrees[x] in sectorialized_degrees[2]]
+    del sectorialized_degrees, agent_degrees
     return locals()
 
 
