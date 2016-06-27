@@ -4,6 +4,10 @@ import pickle
 from string import ascii_lowercase
 from datetime import datetime
 import networkx as x
+# import percolation as P
+from percolation.rdf.sparql.functions import plainQueryValues as pl
+
+prefix = 'PREFIX po: <http://purl.org/socialparticipation/po/>\n'
 
 
 def randomNick():
@@ -73,6 +77,32 @@ def toUndirected(xgraph):
     return gg
 
 
+def makeNetworkFromSnapshotid(client, snapshotid):
+    snapclass = snapshotid.split('#')[0].split('/')[-1]
+    if snapclass == 'FacebookSnapshot':
+        q = '''SELECT ?friend1 ?friend2 WHERE {{
+            ?friendshipfoo po:snapshot <{}> .
+            ?friendshipfoo a po:Friendship .
+            ?friendshipfoo po:member ?friend1 .
+            ?friendshipfoo po:member ?friend2 .
+            }}
+        '''.format(snapshotid, )
+        relational_data = pl(client.retrieveQuery(prefix+q))
+    elif snapclass == 'TwitterSnapshot':
+        q = '''SELECT ?friend1 ?friend2 WHERE {{
+            ?tweetfoo po:snapshot <{}> .
+            ?tweetfoo a po:Tweet .
+            ?tweetfoo po:author ?friend2 .
+            ?tweetfoo po:retweetOf ?tweetfoo2 .
+            ?tweetfoo2 po:author ?friend1 .
+            }}
+        '''.format(snapshotid, )
+        relational_data = pl(client.retrieveQuery(prefix+q))
+    else:
+        raise ValueError('Only Facebook and Twitter snapshots implemented for now')
+    return makeNetwork(relational_data)
+
+
 def makeNetwork(relational_data, force_directed=False):
     if relational_data and len(relational_data[0]) == 3:
         gg = x.DiGraph()
@@ -97,7 +127,14 @@ def makeNetwork(relational_data, force_directed=False):
         gg = x.Graph()
         for val in relational_data:
             gg.add_edge(val[0], val[1])
-        comp = x.connected_component_subgraphs(gg)[0]
+        # comp = x.connected_component_subgraphs(gg)[0]
+        comp = max(x.connected_component_subgraphs(gg), key=len)
         gg_ = gg
         comp_ = comp
     return locals()
+
+
+def pickSnapshot(client):
+    prefix = 'PREFIX po: <http://purl.org/socialparticipation/po/>\n'
+    snapshot = pl(client.retrieveQuery(prefix+'SELECT DISTINCT ?snap WHERE { ?s po:snapshot ?snap } LIMIT 1'))[0]
+    return snapshot
