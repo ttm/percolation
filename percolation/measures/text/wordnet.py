@@ -99,9 +99,10 @@ def systemAnalyseAll(sectors_analysis):
 
 def sectorsAnalyseAll(authors_analysis, sectorialized_agents):
     all_texts_measures = {}
-    for sector in sectorialized_agents:
-      for agent in sectorialized_agents[sector]:
-        analysis = authors_analysis[sector][agent]["wordnet"]
+    # for sector in sectorialized_agents:
+    #   for agent in sectorialized_agents[sector]:
+    for agent in sectorialized_agents:
+        analysis = authors_analysis[agent]["wordnet"]
         for data_grouping in analysis:
             for data_group in analysis[data_grouping]:
                 for measure_group in data_group:
@@ -169,7 +170,7 @@ def analyseAll(pos_analysis):
     texts_measures = {"each_text": []}
     for each_pos_analysis in pos_analysis["texts_measures"]["each_text"]:
         texts_measures["each_text"].append({})
-        texts_measures["each_text"][-1]["wordnet_context"] = contextoWordnet(each_pos_analysis["tagged_tokens"]["the_tagged_tokens"])
+        texts_measures["each_text"][-1]["wordnet_context"] = contextWordnet(each_pos_analysis["tagged_tokens"]["the_tagged_tokens"])
         texts_measures["each_text"][-1].update(medidasWordnetPOS(texts_measures[-1]["wordnet_context"]))
     del each_pos_analysis
     texts_measures.update(medidasMensagens2(texts_measures))
@@ -179,7 +180,7 @@ def analyseAll(pos_analysis):
 def medidasMensagens2(texts_measures):
     all_texts_measures = {}
     for data_group in texts_measures:  # each_text
-        for measure_group in data_group:  # chars, tokens, sents
+        for measure_group in data_group:  # wordnet_context, pos_tag_n _as _v _b
             for measure_type in data_group[measure_group]:  # numeric or list/tuple of strings
                 if measure_type == "strings":
                     continue
@@ -196,11 +197,11 @@ def medidasMensagens2(texts_measures):
                         measure_type_ = "lexnames_overall"
                         data_grouping = "strings"
                     else:
-                        raise KeyError("unidentified measute_type")
+                        raise KeyError("unidentified measure_type")
                     all_texts_measures[data_grouping][0][measure_group][measure_type_][measure_name] += measure
 
-    for data_grouping in all_texts_measures:  # "strings" ou "texts"
-      for data_group in all_texts_measures[data_grouping]:
+    for data_grouping in all_texts_measures:  # "strings" or "texts"
+      for data_group in all_texts_measures[data_grouping]:  # only one group
         for measure_group in data_group:  # wordnet_context, pos_tag_X
             for measure_type in data_group[measure_group]:  # numeric_overall, lengths_overall, lexnames_overall
                 for measure_name in data_group[measure_group][measure_type]:
@@ -214,9 +215,9 @@ def medidasMensagens2(texts_measures):
                                 tags_histogram_normalized[i] = tags_histogram[i]*factor
                             tags_histogram_normalized = c.OrderedDict(sorted(tags_histogram_normalized.items(), key=lambda x: -x[1]))
                         all_texts_measures[data_grouping][0][measure_group]["numeric"].update(tags_histogram_normalized)
-                    else:  # numeric_overall ou lengths_overall
+                    else:  # numeric_overall or lengths_overall
                         mean_name = "M{}".format(measure_name)
-                        std_name = "M{}".format(measure_name)
+                        std_name = "D{}".format(measure_name)
                         mean_val = n.mean(measure)
                         std_val = n.std(measure)
                     if measure_type == "lengths_overall":
@@ -228,8 +229,8 @@ def medidasMensagens2(texts_measures):
     return all_texts_measures
 
 
-def contextoWordnet(pos_tagged_tokens):
-    """Medidas gerais sobre a aplicação da Wordnet TTM"""
+def contextWordnet(pos_tagged_tokens):
+    """Wordnet pos tags"""
     pos_tagged_tokens_lowercase = [(i[0].lower(), i[1]) for i in pos_tagged_tokens]
     tokens_lists = P.measures.text.aux.filtro(pos_tagged_tokens_lowercase)
     tokens_pos_tagger_wordnet_ok = []
@@ -237,15 +238,13 @@ def contextoWordnet(pos_tagged_tokens):
     for token in tokens_lists["token_com_synset"]:
         synset = token[2]
         wordnet_pos_tag = [i.pos() for i in synset]
-        pos_tag = P.text.aux.traduzPOS(token[1])
+        pos_tag = P.measures.text.aux.traduzPOS(token[1])
         found_ok_wordnet_pos_tag = [(pp in pos_tag) for pp in wordnet_pos_tag]
         if sum(found_ok_wordnet_pos_tag):
             tindex = found_ok_wordnet_pos_tag.index(True)
             tokens_pos_tagger_wordnet_ok.append((token[0], synset[tindex]))
         else:
             tokens_pos_tagger_wordnet_not_ok.append(token)
-    # estatísticas sobre words_pos_tagger_wordnet_ok
-    # quais as tags?
     wordnet_pos_tags_ok = [i[1].pos() for i in tokens_pos_tagger_wordnet_ok]
     wordnet_pos_tags_ok_histogram_normalized = [100*wordnet_pos_tags_ok.count(i)/len(tokens_pos_tagger_wordnet_ok)
                                                 for i in ('n', 's', 'a', 'r', 'v')]
@@ -317,7 +316,7 @@ def medidasWordnet(wordnet_context, pos_tag=None):
     measures["extra"] = {}
     measures["extra"]["top_hypernyms"] = top_hypernyms
 
-    lexnames = ["tlex_"+i.lexname().split()[1] for i in tagged_words_chosen]  # rever
+    lexnames = ["tlex_"+i.lexname().split('.')[1] for i in tagged_words_chosen]  # rever
     measures["lexnames"] = {}
     measures["lexnames"].update({"the_lexnames": lexnames})
     lex_histogram = c.Counter(lexnames)

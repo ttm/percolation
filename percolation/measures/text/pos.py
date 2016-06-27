@@ -92,16 +92,17 @@ def systemAnalyseAll(sectors_analysis):
 
 def sectorsAnalyseAll(authors_analysis, sectorialized_agents):
     all_texts_measures = {}
-    for sector in sectorialized_agents:
-      for agent in sectorialized_agents[sector]:
-          analysis = authors_analysis[sector][agent]["wordnet"]
-          for data_grouping in analysis:
-              for data_group in analysis[data_grouping]:
+    # for sector in sectorialized_agents:
+    #   for agent in sectorialized_agents[sector]:
+    for agent in sectorialized_agents:
+          analysis = authors_analysis[agent]["pos"]
+          for data_grouping in analysis:  # string or message/text
+              for data_group in analysis[data_grouping]:  # whole blob or a message
                   for measure_group in data_group:
                       for measure_type in data_group[measure_group]:
                           for measure_name in data_group[measure_group][measure_type]:
                               measure = data_group[measure_group][measure_type][measure_name]
-                              if measure_type == "pos_taggs_overall":  # directly from tokens
+                              if measure_type == "pos_tags_overall":  # directly from tokens
                                   measure_type_ = "pos_tags_overall"
                                   data_grouping_ = "strings"
                               elif measure_type in "numeric_overall":  # messages
@@ -163,7 +164,7 @@ def analyseAll(raw_analysis):
 
 def medidasMensagens2(texts_measures):
     all_texts_measures = {}
-    for data_group in texts_measures:
+    for data_group in texts_measures:  # each text
         for measure_group in data_group:  # pos
             for measure_type in data_group[measure_group]:  # numeric or list/tuple of strings
                 for measure_name in data_group[measure_group][measure_type]:  # nchars, frac_x, known_words, etc
@@ -180,7 +181,7 @@ def medidasMensagens2(texts_measures):
                         raise KeyError("unidentified measute_type")
                     all_texts_measures[data_grouping][0][measure_group][measure_type_][measure_name] += measure
     for data_grouping in all_texts_measures:  # "strings" ou "texts"
-      for data_group in all_texts_measures[data_grouping]:
+      for data_group in all_texts_measures[data_grouping]:  # only one group
         for measure_group in data_group:  # pos
             for measure_type in data_group[measure_group]:  # numeric_overall or pos_tags_overall
                 for measure_name in data_group[measure_group][measure_type]:
@@ -196,7 +197,7 @@ def medidasMensagens2(texts_measures):
                         all_texts_measures[data_grouping][0][measure_group]["numeric"] = tags_histogram_normalized
                     if measure_type == "numeric_overall":
                         mean_name = "M{}".format(measure_name)
-                        std_name = "M{}".format(measure_name)
+                        std_name = "D{}".format(measure_name)
                         all_texts_measures[measure_group]["second_numeric"][mean_name] = n.mean(measure)
                         all_texts_measures[measure_group]["second_numeric"][std_name] = n.std(measure)
     return all_texts_measures
@@ -228,8 +229,8 @@ def medidasPOS(sentences_tokenized):
     by Slav Petrov, Dipanjan Das and Ryan McDonald
     for more details:
         http://arxiv.org/abs/1104.2086"""
-    # metric_type: tagged_sentences # metric_name: the_tagged_sentences, measure: `the tag sentences`
     tagged_sentences = brill_tagger.tag_sents(sentences_tokenized)
+    # metric_type: tagged_sentences # metric_name: the_tagged_sentences, measure: `the tag sentences`
     tagged_tokens = [item for sublist in tagged_sentences for item in sublist]
     tags = [i[1] for i in tagged_tokens if i[0].lower() in WORDLIST]
     tags_histogram = c.Counter(tags)

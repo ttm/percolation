@@ -80,3 +80,25 @@ def filtro(pos_tagged_words_lowercase):
             token_exotico.append(pos_tagged_word)
     del pos_tagged_word, synset, pos_tagged_words_lowercase
     return locals()
+
+
+def mediaDesvioNumbers(adict={"stringkey": "strings_list"}):
+    tdict = {}
+    for key in adict:
+        tdict["m"+key] = n.mean(adict[key])
+        tdict["d"+key] = n.tsd(adict[key])
+    return tdict
+
+
+def traduzPOS(astring):
+    """Traduz as POS tags usadas para a convenção do Wordnet"""
+    if astring in ("NOUN", "NNS", "NN", "NUM"):
+        return wn.NOUN
+    elif astring in ("VERB", "VBG"):
+        return wn.VERB
+    elif astring in ("ADJ", "JJ", "ADP"):
+        return wn.ADJ+wn.ADJ_SAT
+    elif astring in ("ADV", "RB", "PRT"):
+        return wn.ADV
+    else:
+        return "NOPOS"

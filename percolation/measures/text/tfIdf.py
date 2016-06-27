@@ -115,7 +115,7 @@ def systemAnalyseAll(sectors_analysis):
                         for text in measure:
                             all_texts_measures[data_grouping_].append({})
                             all_texts_measures[data_grouping_][-1]["texts"]["each_text"]["the_text"] = text
-                    if measure_type == "each_text_author":  # directly from strings, data_grouping  ==  "strings"
+                    if measure_type == "each_text_author":  # text from each author
                         tfIdf_matrix = tfIdf(measure)
                         distances = n.hstack(tfIdf_matrix[i][:i] for i in n.arange(tfIdf_matrix.shape[0]))
                         all_texts_measures[data_grouping][0]["tfIdf"]["tfIdf_matrix"]["the_matrix_authors"] = tfIdf_matrix
@@ -204,9 +204,10 @@ def systemAnalyseAll(sectors_analysis):
 
 def sectorsAnalyseAll(authors_analysis, sectorialized_agents):
     all_texts_measures = {}
-    for sector in sectorialized_agents:
-      for agent in sectorialized_agents[sector]:
-        analysis = authors_analysis[sector][agent]["tfIdf"]
+    # for sector in sectorialized_agents:
+    #   for agent in sectorialized_agents[sector]:
+    for agent in sectorialized_agents:
+        analysis = authors_analysis[agent]["tfIdf"]
         for data_grouping in analysis:  # texts_overall, each_text
             for data_group in analysis[data_grouping]:
                 for measure_group in data_group:  # tfIdf, text, texts
@@ -277,7 +278,7 @@ def sectorsAnalyseAll(authors_analysis, sectorialized_agents):
     return all_texts_measures
 
 
-def analyseAll(sectors_analysis):
+def analyseAll(texts):
     texts_measures = {"texts_overall": [{"tfIdf": {"tfIds_matrix": {}}}]}
     tfIdf_matrix = tfIdf(texts)
     distances = n.hstack(tfIdf_matrix[i][:i] for i in n.arange(tfIdf_matrix.shape[0]))
@@ -289,7 +290,7 @@ def analyseAll(sectors_analysis):
     texts_measures["each_text"] = []
     for text in texts:
         texts_measures["each_text"].append({})
-        texts_measures["each_text"][-1]["texts"]["each_text"]["the_text"]=texts
+        texts_measures["each_text"][-1]["texts"]["each_text"]["the_text"] = text
     return texts_measures
 
 
@@ -297,5 +298,5 @@ def tfIdf(texts):
     """Returns distance matrix for the texts"""
     vect = TfidfVectorizer(min_df=1)
     tfidf = vect.fit_transform([tt.lower() for tt in texts])
-    aa = (tfidf * tfidf.T).A
+    aa=(tfidf * tfidf.T).A
     return aa
