@@ -1,6 +1,7 @@
 import collections as c
 import numpy as n
 from percolation.measures.text.aux import WORDLIST, brill_tagger
+import percolation as P
 __doc__ = "text analysis with POS tags"
 
 
@@ -154,16 +155,16 @@ def sectorsAnalyseAll(authors_analysis, sectorialized_agents):
 def analyseAll(raw_analysis):
     """Make POS tags analysis of all texts and of merged text"""
     texts_measures = {"each_text": []}
-    for each_raw_analysis in raw_analysis["texts_measures"]["each_text"]:
+    for each_raw_analysis in raw_analysis["each_text"]:
         texts_measures["each_text"].append({})
-        texts_measures["each_text"][-1]["pos"] = [medidasPOS(each_raw_analysis["sentences"]["sentences"])]
+        texts_measures["each_text"][-1]["pos"] = medidasPOS(each_raw_analysis["sentences"]['strings']["sentences"])
     texts_measures.update(medidasMensagens2(texts_measures["each_text"]))
     del each_raw_analysis, raw_analysis
     return locals()
 
 
 def medidasMensagens2(texts_measures):
-    all_texts_measures = {}
+    all_texts_measures_ = {}
     for data_group in texts_measures:  # each text
         for measure_group in data_group:  # pos
             for measure_type in data_group[measure_group]:  # numeric or list/tuple of strings
@@ -179,9 +180,11 @@ def medidasMensagens2(texts_measures):
                         data_grouping = "texts"
                     else:
                         raise KeyError("unidentified measute_type")
-                    all_texts_measures[data_grouping][0][measure_group][measure_type_][measure_name] += measure
-    for data_grouping in all_texts_measures:  # "strings" ou "texts"
-      for data_group in all_texts_measures[data_grouping]:  # only one group
+                    all_texts_measures_ = P.measures.text.aux.makeRoom(all_texts_measures_, data_grouping, measure_group, measure_type_, measure_name)
+                    all_texts_measures_[data_grouping][0][measure_group][measure_type_][measure_name] += measure
+    all_texts_measures = {}
+    for data_grouping in all_texts_measures_:  # "strings" ou "texts"
+      for data_group in all_texts_measures_[data_grouping]:  # only one group
         for measure_group in data_group:  # pos
             for measure_type in data_group[measure_group]:  # numeric_overall or pos_tags_overall
                 for measure_name in data_group[measure_group][measure_type]:
@@ -194,12 +197,14 @@ def medidasMensagens2(texts_measures):
                             for i in tags_histogram:
                                 tags_histogram_normalized[i] = tags_histogram[i]*factor
                             tags_histogram_normalized = c.OrderedDict(sorted(tags_histogram_normalized.items(), key=lambda x: -x[1]))
+                        all_texts_measures = P.measures.text.aux.makeRoom(all_texts_measures, data_grouping, measure_group, 'numeric')
                         all_texts_measures[data_grouping][0][measure_group]["numeric"] = tags_histogram_normalized
                     if measure_type == "numeric_overall":
                         mean_name = "M{}".format(measure_name)
                         std_name = "D{}".format(measure_name)
-                        all_texts_measures[measure_group]["second_numeric"][mean_name] = n.mean(measure)
-                        all_texts_measures[measure_group]["second_numeric"][std_name] = n.std(measure)
+                        all_texts_measures = P.measures.text.aux.makeRoom(all_texts_measures, data_grouping, measure_group, 'second_numeric')
+                        all_texts_measures[data_grouping][0][measure_group]["second_numeric"][mean_name] = n.mean(measure)
+                        all_texts_measures[data_grouping][0][measure_group]["second_numeric"][std_name] = n.std(measure)
     return all_texts_measures
 
 

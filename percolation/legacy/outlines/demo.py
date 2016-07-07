@@ -10,13 +10,13 @@ def textAnalysis(client):
     network = P.utils.makeNetworkFromSnapshotid(client, snapshot)
     analysis = P.legacy.analyses.topological.TopologicalAnalysis(network['gg'])
 
-    q = '''SELECT ?author, ?text WHERE {{
+    q = '''SELECT ?author ?text WHERE {
             ?tweet po:author ?author .
             ?tweet po:message ?text .
-        }}
+        }
         '''
     authors_text = pl(client.retrieveQuery(prefix+q))
-    P.measures.text.overall(authors_text, analysis.sectors['sectorialized_agents'])
+    P.measures.text.overall.measureAll(authors_text, analysis.sectors['sectorialized_agents'])
     return snapshot, analysis
 
 

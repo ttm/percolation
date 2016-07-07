@@ -170,10 +170,10 @@ def analyseAll(pos_analysis):
     texts_measures = {"each_text": []}
     for each_pos_analysis in pos_analysis["texts_measures"]["each_text"]:
         texts_measures["each_text"].append({})
-        texts_measures["each_text"][-1]["wordnet_context"] = contextWordnet(each_pos_analysis["tagged_tokens"]["the_tagged_tokens"])
-        texts_measures["each_text"][-1].update(medidasWordnetPOS(texts_measures[-1]["wordnet_context"]))
+        texts_measures["each_text"][-1]["wordnet_context"] = contextWordnet(each_pos_analysis['pos']["tagged_tokens"]["the_tagged_tokens"])
+        texts_measures["each_text"][-1].update(medidasWordnetPOS(texts_measures['each_text'][-1]["wordnet_context"]))
     del each_pos_analysis
-    texts_measures.update(medidasMensagens2(texts_measures))
+    texts_measures.update(medidasMensagens2(texts_measures['each_text']))
     return locals()
 
 
@@ -250,11 +250,11 @@ def contextWordnet(pos_tagged_tokens):
                                                 for i in ('n', 's', 'a', 'r', 'v')]
     wordnet_pos_tags_ok_histogram_normalized[1] += wordnet_pos_tags_ok_histogram_normalized[2]
     wordnet_pos_tags_ok_histogram_normalized = wordnet_pos_tags_ok_histogram_normalized[0:2]+wordnet_pos_tags_ok_histogram_normalized[3:]
-    wordnet_pos_tags_ok_histogram_normalized = c.OrderedDict(sorted(wordnet_pos_tags_ok_histogram_normalized.items(), key=lambda x: -x[1]))
+    # wordnet_pos_tags_ok_histogram_normalized = c.OrderedDict(sorted(wordnet_pos_tags_ok_histogram_normalized.items(), key=lambda x: -x[1]))
     measures = {"tokens_wnsynsets": {}, "numeric": {}}
     measures["tokens_wnsynsets"]["words_pos_tagger_wordnet_ok"] = tokens_pos_tagger_wordnet_ok
     # measures["strings"]["tokens_pos_tagger_wordnet_not_ok"]=tokens_pos_tagger_wordnet_not_ok
-    measures["numeric"] = wordnet_pos_tags_ok_histogram_normalized
+    measures["numeric"] = {i: j for i, j in zip(('n', 'sa', 'r', 'v'), wordnet_pos_tags_ok_histogram_normalized)}
     measures["numeric"].update({"frac_pos_tagger_wordnet_ok": len(tokens_pos_tagger_wordnet_ok)/len(pos_tagged_tokens)})
     return measures
 
@@ -269,7 +269,7 @@ def medidasWordnetPOS(wordnet_context, pos_tags=("n", "as", "v", "r")):
 
 def medidasWordnet(wordnet_context, pos_tag=None):
     """Medidas das categorias da Wordnet sobre os verbetes TTM"""
-    tagged_words = wordnet_context["tokens_pos_tagger_wordnet_ok"]
+    tagged_words = wordnet_context['tokens_wnsynsets']["words_pos_tagger_wordnet_ok"]
     if pos_tag:
         tagged_words_chosen = [i[1] for i in tagged_words if i[1].pos() in pos_tag]
     else:
@@ -305,14 +305,16 @@ def medidasWordnet(wordnet_context, pos_tag=None):
     similar = [i.similar_tos() for i in tagged_words_chosen]
     verb_groups = [i.verb_groups() for i in tagged_words_chosen]
 
-    measures = P.text.aux.mediaDesvio2(locals())
+    loc = locals().copy()
+    del loc['tagged_words_chosen']
+    measures = P.measures.text.aux.mediaDesvio2(loc)
     max_depth = [i.max_depth() for i in tagged_words_chosen]
     min_depth = [i.min_depth() for i in tagged_words_chosen]
     tdict = {"tmax_depth": max_depth, "tmin_depth": min_depth}
     measures["lengths"].update(tdict)
-    measures["numeric"].update(P.text.aux.mediaDesvioNumbers(tdict))
+    measures["numeric"].update(P.measures.text.aux.mediaDesvioNumbers(tdict))
 
-    top_hypernyms = [i[0][:7] for i in hyperpaths]  # para fazer histograma por camada
+    top_hypernyms = [i[:7] for i in hyperpaths]  # para fazer histograma por camada
     measures["extra"] = {}
     measures["extra"]["top_hypernyms"] = top_hypernyms
 

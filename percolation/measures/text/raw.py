@@ -1,5 +1,4 @@
 import numpy as n
-import time
 import string
 import nltk as k
 import percolation as P
@@ -152,19 +151,20 @@ def analyseAll(texts_list):
         texts_measures["each_text"].append({})
         texts_measures["each_text"][-1]["chars"] = medidasChars(text)
         texts_measures["each_text"][-1]["tokens"] = medidasTokens(text)
-        texts_measures["each_text"][-1]["sentences"] = medidasSentencasParagrafos(text, texts_measures[-1]["tokens"]["known_words_unique"])
+        texts_measures["each_text"][-1]["sentences"] = medidasSentencasParagrafos(text, texts_measures['each_text'][-1]["tokens"]['strings']["known_words_unique"])
     del text
     texts_measures.update(medidasMensagens2(texts_measures["each_text"]))
     return texts_measures
 
 
 def medidasMensagens2(texts_measures):
-    all_texts_measures = {}
+    all_texts_measures_ = {}
     for data_group in texts_measures:  # each_text dict
         for measure_group in data_group:  # chars, tokens, sents
-            for measure_type in data_group[measure_group]:  # numeric or list/tuple of strings
+            for measure_type in data_group[measure_group]:  # numeric or list of lengths or tuple of strings
                 for measure_name in data_group[measure_group][measure_type]:  # nchars, frac_x, known_words, etc
                     measure = data_group[measure_group][measure_type][measure_name]
+                    # if measure_type == "strings":  # from overall text directly
                     if measure_type == "lengths":  # from overall text directly
                         measure_type_ = "lengths_overall"
                         data_grouping = "strings"
@@ -172,19 +172,31 @@ def medidasMensagens2(texts_measures):
                         measure = [measure]
                         measure_type_ = "numeric_overall"
                         data_grouping = "texts"
-                    all_texts_measures[data_grouping][0][measure_group][measure_type_][measure_name] += measure
-    for data_grouping in all_texts_measures:  # "strings" ou "texts"
-      for data_group in all_texts_measures[data_grouping]:  # only one group
+                    elif measure_type == 'strings':
+                        continue
+                    else:
+                        raise ValueError('measure type not understood')
+                    all_texts_measures_ = P.measures.text.aux.makeRoom(all_texts_measures_, data_grouping, measure_group, measure_type_, measure_name)
+                    all_texts_measures_[data_grouping][0][measure_group][measure_type_][measure_name] += measure
+    all_texts_measures = {}
+    for data_grouping in all_texts_measures_:  # "strings" ou "texts"
+      for data_group in all_texts_measures_[data_grouping]:  # only one group, author by author
         for measure_group in data_group:  # chars, tokens, sents
-            for measure_type in data_group[measure_group]:  # numeric or list/tuple of strings
+            for measure_type in data_group[measure_group]:  # numeric_overall or lengths_overall
                 for measure_name in data_group[measure_group][measure_type]:  # nchars, frac_x, known_words, etc
                     vals = data_group[measure_group][measure_type][measure_name]
                     mean_name = "M{}".format(measure_name)
                     std_name = "D{}".format(measure_name)
                     if measure_type == "lengths_overall":  # from overall text directly
+                        # if 'numeric' not in all_texts_measures[data_grouping][0][measure_group]:
+                        #     all_texts_measures[data_grouping][0][measure_group]['numeric'] = {}
+                        all_texts_measures = P.measures.text.aux.makeRoom(all_texts_measures, data_grouping, measure_group, 'numeric')
                         all_texts_measures[data_grouping][0][measure_group]["numeric"][mean_name] = n.mean(vals)
                         all_texts_measures[data_grouping][0][measure_group]["numeric"][std_name] = n.std(vals)
                     elif measure_type == "numeric_overall":  # from each of the texts
+                        # if 'numeric_overall' not in all_texts_measures[data_grouping][0][measure_group]:
+                        #     all_texts_measures[data_grouping][0][measure_group]['numeric_overall'] = {}
+                        all_texts_measures = P.measures.text.aux.makeRoom(all_texts_measures, data_grouping, measure_group, 'second_numeric')
                         all_texts_measures[data_grouping][0][measure_group]["second_numeric"][mean_name] = n.mean(vals)
                         all_texts_measures[data_grouping][0][measure_group]["second_numeric"][std_name] = n.std(vals)
     return all_texts_measures
@@ -212,7 +224,6 @@ def medidasChars(T):
 
 def medidasTokens(T):
     """Medidas extensas sobre os tokens TTM"""
-    atime = time.time()
     T = T.lower()
     tokens = k.tokenize.wordpunct_tokenize(T)
     del T
@@ -270,11 +281,11 @@ def medidasTokens(T):
 
 def tokensFracs(strings):
     ntokens = len(strings["tokens"])
-    frac_punctuations = len(strings["punctuations"])/len(strings["tokens"])
+    frac_punctuations = len(strings["punctuation_tokens"])/len(strings["tokens"])
     frac_known_words = len(strings["known_words"])/len(strings["tokens"])
-    frac_stopwords = len(strings["stopwords"])/len(strings["known_words"])
-    lexical_diversity = len(strings["known_words"])/len(strings["known_words_unique"])
-    token_diversity = len(strings["tokens_unique"])/ntokens
+    frac_stopwords = n.float64(len(strings["stopwords"]))/len(strings["known_words"])
+    lexical_diversity = n.float64(len(strings["known_words"]))/len(strings["known_words_unique"])
+    token_diversity = len(set(strings["tokens"]))/ntokens
     del strings
     return locals()
 
@@ -305,7 +316,7 @@ def medidasSentencasParagrafos(T, known_words_unique):
                                (len(i) == sum([(ii in string.punctuation) for ii in i]))]
                               for ts in tokens_sentences]
 
-    measures = P.text.aux.mediaDesvio2(locals())
+    measures = P.measures.text.aux.mediaDesvio2(locals())
     measures["numeric"].update(sentenceFracs(measures["strings"]))
     return measures
 

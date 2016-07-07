@@ -9,15 +9,29 @@ STOPWORDS = set(k.corpus.stopwords.words('english'))
 wn = k.corpus.wordnet
 
 tpath = os.path.abspath(__file__).replace(os.path.basename(__file__), '')
-if 'words.txt' not in os.listdir('.'):
+if 'words.txt' not in os.listdir(tpath):
     print('downloading english words list')
-    os.system('wget https://raw.githubusercontent.com/dwyl/english-words/master/words.txt {}words.txt'.format(tpath))
+    os.system('wget https://raw.githubusercontent.com/dwyl/english-words/master/words.txt -P {}'.format(tpath))
+    # os.system('wget https://raw.githubusercontent.com/dwyl/english-words/master/words.txt {}words.txt'.format(tpath))
     print('finished download')
 with open(tpath + 'words.txt') as f:
     WORDLIST = set(f.read())
 
 f = open(tpath+"brill_taggerT2M1", "rb")
 brill_tagger = pickle.load(f)
+
+
+def makeRoom(all_texts_measures, data_grouping, measure_group, measure_type_, measure_name=None):
+    '''Make sure the dictionary has the keys for input'''
+    if data_grouping not in all_texts_measures:
+        all_texts_measures[data_grouping] = [{}]
+    if measure_group not in all_texts_measures[data_grouping][0]:
+        all_texts_measures[data_grouping][0][measure_group] = {}
+    if measure_type_ not in all_texts_measures[data_grouping][0][measure_group]:
+        all_texts_measures[data_grouping][0][measure_group][measure_type_] = {}
+    if measure_name and measure_name not in all_texts_measures[data_grouping][0][measure_group][measure_type_]:
+        all_texts_measures[data_grouping][0][measure_group][measure_type_][measure_name] = []
+    return all_texts_measures
 
 
 def mediaDesvio2(adict={"stringkey": "strings_list"}):
@@ -86,7 +100,7 @@ def mediaDesvioNumbers(adict={"stringkey": "strings_list"}):
     tdict = {}
     for key in adict:
         tdict["m"+key] = n.mean(adict[key])
-        tdict["d"+key] = n.tsd(adict[key])
+        tdict["d"+key] = n.std(adict[key])
     return tdict
 
 

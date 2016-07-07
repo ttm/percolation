@@ -129,7 +129,7 @@ class SparQLQueries:
         )[0]
         return self.ntriples
     def getAllGraphs(self):
-        query=r"SELECT ?g WHERE { GRAPH ?g {} }"
+        query=r"SELECT DISTINCT ?g WHERE { GRAPH ?g {?s ?p ?o} }"
         self.graphs= P.rdf.sparql.functions.plainQueryValues(
             self.retrieveQuery(query)
         )
