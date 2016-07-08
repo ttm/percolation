@@ -63,7 +63,7 @@ bootstrap.py for PercolationServer and the canonic startup
 
 legacy/\* for standard usage outlines, analyses and media rendering from legacy data (Open Linked Open Data)
 - harnessing/\*.py for percolative procedures (e.g. experiments), resource recommendation, self-knowledge and information collection and diffusion.
-- media\_rendering/ for general output of media (music.py, image.py, animation.py, table.py, game.py).
+- mediaRendering/ for general output of media (music.py, image.py, animation.py, table.py, game.py).
 - rdf 
 - analyses/\*.py for canonical percolation analysis of structures, results in assertions and data endorsements
 - measures/\*.py for measurement routines, data structures and values from initial data
