@@ -138,3 +138,14 @@ def pickSnapshot(client):
     prefix = 'PREFIX po: <http://purl.org/socialparticipation/po/>\n'
     snapshot = pl(client.retrieveQuery(prefix+'SELECT DISTINCT ?snap WHERE { ?s po:snapshot ?snap } LIMIT 1'))[0]
     return snapshot
+
+
+def pDump(tobject,tfilename):
+    with open(tfilename,"wb") as f:
+        pickle.dump(tobject,f,-1)
+
+
+def pRead(tfilename):
+    with open(tfilename,"rb") as f:
+        tobject=pickle.load(f)
+    return tobject
