@@ -9,12 +9,20 @@ def fromDict(tdict, column_names, fname='', caption='', longtable=False, size='\
     for key in tdict:
         vals = tdict[key]
         row = key
-        for column_name in column_names[1:]:
-            val = vals[column_name]
-            if isinstance(val, float):
-                row += " & %.2f " % (val,)
+        if len(column_names) > 2:
+            for column_name in column_names[1:]:
+                val = vals[column_name]
+                if isinstance(val, float):
+                    row += " & %.2f " % (val,)
+                elif not val:
+                    row += " & 0 "
+                else:
+                    row += " & %s " % (val,)
+        else:
+            if isinstance(vals, float):
+                row += " & %.2f " % (vals,)
             else:
-                row += " & %s " % (val,)
+                row += " & %s " % (vals,)
         row += "\\\\\\hline\n"
         rows.append(row)
     string_table = ''.join(rows).replace('#', '\\#').replace('_', '\\_')
