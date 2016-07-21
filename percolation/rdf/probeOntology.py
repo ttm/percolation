@@ -1,5 +1,6 @@
 import os
 import rdflib as r
+import pygraphviz as gv
 import percolation as P
 from percolation import c
 from .rdflib import NS, a
@@ -30,7 +31,6 @@ def probeOntology(endpoint_url, graph_urn, final_dir):
     q = "SELECT DISTINCT ?o WHERE { ?s rdf:type ?o . }"
     # classes = pl(client.retrieveQuery(prefix+q))
     classes = mkQuery(q)
-    classes_ = [i.split("/")[-1] for i in classes]
 
     c('find properties')
     q = "SELECT DISTINCT ?p WHERE {?s ?p ?o}"
@@ -40,8 +40,9 @@ def probeOntology(endpoint_url, graph_urn, final_dir):
 
     c('antecedents and consequents of each class')
     neighbors = {}
-    neighbors_ = {}
     triples = []
+    existential_restrictions = {}
+    universal_restrictions = {}
     for aclass in classes:
         q = "SELECT DISTINCT ?cs ?p WHERE { ?i a <%s> . ?s ?p ?i . OPTIONAL { ?s a ?cs . } }" % (aclass,)
         antecedent_property = mkQuery(q)
@@ -81,6 +82,10 @@ def probeOntology(endpoint_url, graph_urn, final_dir):
                                 (B, owl.onProperty, pc),
                                 (B, owl.someValuesFrom, ob)
                                ]
+                    if aclass in existential_restrictions.keys():
+                        existential_restrictions[aclass].append((pc, ob))
+                    else:
+                        existential_restrictions[aclass] = [(pc, ob)]
             query4 = "SELECT DISTINCT ?s WHERE { ?s <%s> ?o .}" % (pc,)
             inds3 = mkQuery(query4)
             if set(inds) == set(inds3):  # universal
@@ -99,13 +104,19 @@ def probeOntology(endpoint_url, graph_urn, final_dir):
                                 (B, owl.onProperty, pc),
                                 (B, owl.allValuesFrom, ob)
                                 ]
+                    if aclass in universal_restrictions.keys():
+                        universal_restrictions[aclass].append((pc, ob))
+                    else:
+                        universal_restrictions[aclass] = [(pc, ob)]
     del q, aclass, antecedent_property, consequent_property
+    functional_properties = set()
     for prop in properties:
         # check if property is functional
         q = 'SELECT DISTINCT (COUNT(?o) as ?co) WHERE { ?s <%s> ?o } GROUP BY ?s' % (prop,)
         is_functional = mkQuery(q)
         if len(is_functional) == 1 and is_functional[0] == 1:
             triples.append((prop, a, owl.FunctionalProperty))
+            functional_properties.add(prop)
 
         # datatype or object properties
         suj = mkQuery("SELECT DISTINCT ?cs WHERE { ?s <%s> ?o . ?s a ?cs . }" % (prop,))
@@ -136,4 +147,86 @@ def probeOntology(endpoint_url, graph_urn, final_dir):
         # prop_ = prop.split("/")[-1]
         # suj_ = [i.split('/')[-1] for i in suj]
         # obj_ = [i.split('/')[-1] for i in obj]
+    # Drawing
+    A = gv.AGraph(directed=True)
+    A.graph_attr["label"] = r"General diagram of ontological structure from %s in the http://purl.org/socialparticipation/participationontology/ namespace.\nGreen edge denotes existential restriction;\ninverted edge nip denotes universal restriction;\nfull edges (non-dashed) denote functional property."
+    edge_counter = 1
+    for aclass in classes:
+        aclass_ = aclass.split('\')[-1]
+        if aclass_ not in A.nodes():
+            A.add_node(aclass_, style="filled")
+            n = A.get_node(aclass_)
+            n.attr['color'] = "#A2F3D1"
+        neigh = neighbors[aclass]
+        for i in range(len(neigh[0])):  # antecendents
+            label = neigh[0][i][0].split("/")[-1]
+            elabel = neigh[0][i][1]
+            elabel_ = elabel.split("/")[-1]
+            if label not in A.nodes():
+                A.add_node(label, style="filled")
+                n = A.get_node(label)
+                n.attr['color'] = "#A2F3D1"
+            A.add_edge(label, aclass_)
+            e = A.get_edge(label, aclass_)
+            e.attr["label"] = elabel_
+            e.attr["penwidth"] = 2.
+            e.attr["arrowsize"] = 2.
+            if elabel_ not in functional_properties:
+                e.attr["style"] = "dashed"
+            if neigh[0][i][0] in existential_restrictions.keys():
+                restriction = existential_restrictions[ex[0][i][0]]
+                prop = [iii[0] for iii in restriction]
+                obj = [iii[1] for iii in restriction]
+                if (elabel in prop) and (obj[prop.index(elabel)] == aclass):
+                    e.attr["color"] = "#A0E0A0"
+            if neigh[0][i][0] in universal_restrictions.keys():
+                restriction = universal_restrictions[ex[0][i][0]]
+                prop = [iii[0] for iii in restriction]
+                obj = [iii[1] for iii in restriction]
+                if (elabel in prop) and (obj[prop.index(elabel)] == aclass):
+                    e.attr["color"] = "inv"
+        for i in range(len(neigh[1])):  # consequents
+            label = ex[1][i][1].split("/")[-1]
+            elabel = ex[1][i][0]
+            elabel_ = elabel.split('/')
+            if "XMLS" in label:
+                label_ = edge_counter
+                edge_counter += 1
+                color = "#FFE4AA"
+            else:
+                label_ = label
+                color = "#A2F3D1"
+            if label_ not in A.nodes():
+                A.add_node(label_, style="filled")
+                n = A.get_node(label_)
+                n.attr['label'] = label.split("#")[-1]
+                n.attr['color'] = color
+            A.add_edge(aclass, label_)
+            e = A.get_edge(aclass, label_)
+            e.attr["label"] = elabel
+            e.attr["color"] = color
+            e.attr["penwidth"] = 2
+            if elabel not in functional_properties:
+                e.attr["style"] = "dashed"
+            if aclass in existential_restrictions.keys():
+                restriction = existential_restrictions[aclass]
+                prop = [iii[0] for iii in restriction]
+                if elabel in prop:
+                    e.attr["color"] = "#A0E0A0"
+            if aclass in universal_restrictions.keys():
+                restriction = universal_restrictions[aclass]
+                prop = [iii[0] for iii in restriction]
+                if elabel in prop:
+                    e.attr["arrowhead"] = "inv"
+                    e.attr["arrowsize"] = 2.
+
+    A.draw(os.path.join(final_dir, "draw.png"), prog="dot")
+    A.draw(os.path.join(final_dir, "draw_circo.png"), prog="circo")
+    A.draw(os.path.join(final_dir, "draw_fdp.png"), prog="fdp")
+    A.draw(os.path.join(final_dir, "draw_twopi.png"), prog="twopi")
+    g = r.Graph()
+    for triple in triples:
+        g.add(triple)
+    g.serialize(os.path.join(final_dir, 'ontology.owl'))
+    g.serialize(os.path.join(final_dir, 'ontology.ttl', 'turtle'))
     return locals()
