@@ -40,6 +40,7 @@ class SparQLClient:
     def __init__(self, endpoint_url):
         self.endpoint = SPARQLWrapper(endpoint_url)
         self.endpoint_url = endpoint_url
+        self.endpoint.setTimeout(10*60)
 
     def addLocalFileToEndpoint(self, tfile, tgraph=default):
         cmd = "s-post {} {} {}".format(self.endpoint_url, tgraph, tfile)
@@ -100,6 +101,7 @@ class SparQLQueries:
         """Query for retrieving information (e.g. through select)"""
         self.endpoint.method = "GET"
         self.endpoint.setReturnFormat(JSON)
+        self.endpoint.setTimeout(10*60)
         return self.performQuery(querystring)
 
     def updateQuery(self, querystring):

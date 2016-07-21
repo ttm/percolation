@@ -10,16 +10,18 @@ from percolation.rdf.sparql.functions import plainQueryValues as pl
 __doc__ = 'routine to probe ontology from rdf graph structures'
 
 
-def probeOntology(endpoint_url, graph_urn, final_dir):
+def probeOntology(endpoint_url, graph_urns, final_dir):
     if not os.path.isdir(final_dir):
         os.makedirs(final_dir)
 
     client = P.rdf.sparql.classes.LegacyClient(endpoint_url)
-    from_ = '\nFROM <%s>\n' % (graph_urn,)
+    from_ = ''
+    for graph_urn in graph_urns:
+        from_ += '\nFROM <%s>' % (graph_urn,)
 
     def mkQuery(query, plain=True):
        query_ = query.split('WHERE')
-       query__ = (query_[0], from_, 'WHERE '+query_[1])
+       query__ = (query_[0], from_, '\nWHERE '+query_[1])
        query___ = ''.join(query__)
        result = client.retrieveQuery(query___)
        if plain:
@@ -148,10 +150,12 @@ def probeOntology(endpoint_url, graph_urn, final_dir):
         # suj_ = [i.split('/')[-1] for i in suj]
         # obj_ = [i.split('/')[-1] for i in obj]
     # Drawing
-    print('started drawing')
-    A = gv.AGraph(directed=True)
+    c('started drawing')
+    A = gv.AGraph(directed=True, strict=False)
     A.graph_attr["label"] = r"General diagram of ontological structure from %s in the http://purl.org/socialparticipation/participationontology/ namespace.\nGreen edge denotes existential restriction;\ninverted edge nip denotes universal restriction;\nfull edge (non-dashed) denotes functional property."
     edge_counter = 1
+    node_counter = 1
+    data_nodes = {}
     for aclass in classes:
         aclass_ = aclass.split('/')[-1]
         if aclass_ not in A.nodes():
@@ -167,12 +171,14 @@ def probeOntology(endpoint_url, graph_urn, final_dir):
                 A.add_node(label, style="filled")
                 n = A.get_node(label)
                 n.attr['color'] = "#A2F3D1"
-            A.add_edge(label, aclass_)
-            e = A.get_edge(label, aclass_)
+            ekey = '{}-{}-{}'.format(label, aclass_, edge_counter)
+            edge_counter += 1
+            A.add_edge(label, aclass_, ekey)
+            e = A.get_edge(label, aclass_, key=ekey)
             e.attr["label"] = elabel_
             e.attr["penwidth"] = 2.
             e.attr["arrowsize"] = 2.
-            if elabel_ not in functional_properties:
+            if elabel not in functional_properties:
                 e.attr["style"] = "dashed"
             if neigh[0][i][0] in existential_restrictions.keys():
                 restriction = existential_restrictions[neigh[0][i][0]]
@@ -191,9 +197,12 @@ def probeOntology(endpoint_url, graph_urn, final_dir):
             elabel = neigh[1][i][0]
             elabel_ = elabel.split('/')[-1]
             if "XMLS" in label:
-                label_ = edge_counter
-                edge_counter += 1
                 color = "#FFE4AA"
+                if label in data_nodes:
+                    label_ = data_nodes[label]
+                else:
+                    label_ = node_counter
+                    node_counter += 1
             else:
                 label_ = label
                 color = "#A2F3D1"
@@ -202,8 +211,10 @@ def probeOntology(endpoint_url, graph_urn, final_dir):
                 n = A.get_node(label_)
                 n.attr['label'] = label.split("#")[-1]
                 n.attr['color'] = color
-            A.add_edge(aclass_, label_)
-            e = A.get_edge(aclass_, label_)
+            ekey = '{}-{}-{}'.format(aclass_, label_, edge_counter)
+            edge_counter += 1
+            A.add_edge(aclass_, label_, ekey)
+            e = A.get_edge(aclass_, label_, key=ekey)
             e.attr["label"] = elabel_
             e.attr["color"] = color
             e.attr["penwidth"] = 2
@@ -225,12 +236,12 @@ def probeOntology(endpoint_url, graph_urn, final_dir):
     A.draw(os.path.join(final_dir, "draw_circo.png"), prog="circo")
     A.draw(os.path.join(final_dir, "draw_fdp.png"), prog="fdp")
     A.draw(os.path.join(final_dir, "draw_twopi.png"), prog="twopi")
-    # g = r.Graph()
     # for triple in triples:
     #     g.add(triple)
+    P.start()
     P.context('ontology', 'remove')
     P.add(triples, 'ontology')
     g = P.context('ontology')
     g.serialize(os.path.join(final_dir, 'ontology.owl'))
-    g.serialize(os.path.join(final_dir, 'ontology.ttl', 'turtle'))
+    g.serialize(os.path.join(final_dir, 'ontology.ttl'), 'turtle')
     return locals()

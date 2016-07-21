@@ -131,12 +131,12 @@ def add(triples, context=None, percolation_graph=None):
     if isinstance(triples[0], (r.URIRef, r.Namespace)):
         triples = [triples]
     # triples = [i for i in triples if i[2]]
-    if not percolation_graph and P.client:
+    if percolation_graph is None and P.client:
         c('==>>> add to sparql endpoint')
         P.client.insertTriples(triples, context)
         c('added')
         return
-    elif not percolation_graph:
+    elif percolation_graph is None:
         percolation_graph = P.percolation_graph
     quads = []
     for triple in triples:
@@ -148,6 +148,8 @@ def add(triples, context=None, percolation_graph=None):
             subject = r.URIRef(subject)
         quads += [(subject, triple[1], object_, context)]
     percolation_graph.addN(quads)
+
+
 def context(context=None,command=None,percolation_graph=None):
     if P.client:
         if not context:
@@ -155,7 +157,7 @@ def context(context=None,command=None,percolation_graph=None):
         else:
             # get all triples from the graph
             return P.client.getAllTriples(context)
-    if not percolation_graph:
+    if percolation_graph is None:
         percolation_graph=P.percolation_graph
     if not context:
         graphlist=[i for i in percolation_graph.contexts()]

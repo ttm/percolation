@@ -25,6 +25,7 @@ class PercolationServer:
 
 
 endpoint_url_ = os.getenv("PERCOLATION_ENDPOINT")
+P.client = None
 
 
 def start(start_session=True, endpoint_url=endpoint_url_):
