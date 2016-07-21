@@ -1,6 +1,10 @@
 import os
+import rdflib as r
 import percolation as P
 from percolation import c
+from .rdflib import NS, a
+rdfs = NS.rdfs
+owl = NS.owl
 from percolation.rdf.sparql.functions import plainQueryValues as pl
 __doc__ = 'routine to probe ontology from rdf graph structures'
 
@@ -20,7 +24,7 @@ def probeOntology(endpoint_url, graph_urn, final_dir):
        if plain:
            return pl(result)
        else:
-           return result
+           return result['results']['bindings']
 
     c('find all classes')
     q = "SELECT DISTINCT ?o WHERE { ?s rdf:type ?o . }"
@@ -37,6 +41,7 @@ def probeOntology(endpoint_url, graph_urn, final_dir):
     c('antecedents and consequents of each class')
     neighbors = {}
     neighbors_ = {}
+    triples = []
     for aclass in classes:
         q = "SELECT DISTINCT ?cs ?p WHERE { ?i a <%s> . ?s ?p ?i . OPTIONAL { ?s a ?cs . } }" % (aclass,)
         antecedent_property = mkQuery(q)
@@ -48,9 +53,9 @@ def probeOntology(endpoint_url, graph_urn, final_dir):
         # neighbors[aclass] = (antecedent_property, dict(consequent_property, **consequent_property_))
 
         # class restrictions
-        q = "SELECT DISTINCT ?p WHERE {?s a <%s>. ?s ?p ?o .}" % (classe,)
+        q = "SELECT DISTINCT ?p WHERE {?s a <%s>. ?s ?p ?o .}" % (aclass,)
         props_c = mkQuery(q)
-        q = "SELECT DISTINCT ?s WHERE {?s a <%s>}" % (classe,)
+        q = "SELECT DISTINCT ?s WHERE {?s a <%s>}" % (aclass,)
         inds = mkQuery(q)
         for pc in props_c:
             if '22-rdf-syntax' in pc:
@@ -62,41 +67,53 @@ def probeOntology(endpoint_url, graph_urn, final_dir):
             vals = set([i["do"]["value"] for i in inds2 if "do" in i.keys()])
             if len(inds) == len(inds2_):  # existential
                 if len(vals):
-                    ob = vals[0]
+                    ob = list(vals)[0]
                 else:
-                    ob = list(objs)[0]
-                B = r.BNode()
-                triples += [(aclass, rdfs.subClassOf, B),
-                            (B, rdf.type, owl.Restriction),
-                            (B, owl.onProperty, pc),
-                            (B, owl.someValuesFrom, ob)
-                            ]
+                    if len(objs):
+                        ob = list(objs)[0]
+                    else:
+                        ob = 0
+                if ob:
+                    B = r.BNode()
+                    triples += [
+                                (aclass, rdfs.subClassOf, B),
+                                (B, a, owl.Restriction),
+                                (B, owl.onProperty, pc),
+                                (B, owl.someValuesFrom, ob)
+                               ]
             query4 = "SELECT DISTINCT ?s WHERE { ?s <%s> ?o .}" % (pc,)
             inds3 = mkQuery(query4)
             if set(inds) == set(inds3):  # universal
                 if len(vals):
-                    ob = vals[0]
+                    ob = list(vals)[0]
                 else:
-                    ob = list(objs)[0]
-                B = r.BNode()
-                triples += [(aclass, rdfs.subClassOf, B),
-                            (B, rdf.type, owl.Restriction),
-                            (B, owl.onProperty, pc),
-                            (B, owl.allValuesFrom, ob)
-                            ]
+                    if len(objs):
+                        ob = list(objs)[0]
+                    else:
+                        ob = 0
+                if ob:
+                    B = r.BNode()
+                    triples += [
+                                (aclass, rdfs.subClassOf, B),
+                                (B, a, owl.Restriction),
+                                (B, owl.onProperty, pc),
+                                (B, owl.allValuesFrom, ob)
+                                ]
     del q, aclass, antecedent_property, consequent_property
-    triples = []
     for prop in properties:
         # check if property is functional
         q = 'SELECT DISTINCT (COUNT(?o) as ?co) WHERE { ?s <%s> ?o } GROUP BY ?s' % (prop,)
         is_functional = mkQuery(q)
-        if len(is_functional) == 1 and is_functional[0]['value'] == 1:
+        if len(is_functional) == 1 and is_functional[0] == 1:
             triples.append((prop, a, owl.FunctionalProperty))
 
         # datatype or object properties
         suj = mkQuery("SELECT DISTINCT ?cs WHERE { ?s <%s> ?o . ?s a ?cs . }" % (prop,))
-        obj = mkQuery("SELECT DISTINCT ?co (datatype(?o) as ?do) WHERE { ?s <%s> ?o . OPTIONAL { ?o a ?co . } }" % (prop,))
-        if len(cons) and ("XMLS" in obj[0]):
+        # obj = mkQuery("SELECT DISTINCT ?co (datatype(?o) as ?do) WHERE { ?s <%s> ?o . OPTIONAL { ?o a ?co . } }" % (prop,))
+        obj1 = mkQuery("SELECT DISTINCT ?co WHERE { ?s <%s> ?o . ?o a ?co . }" % (prop,))
+        obj2 = mkQuery("SELECT DISTINCT (datatype(?o) as ?do) WHERE { ?s <%s> ?o . }" % (prop,))
+        obj = obj1+obj2
+        if len(obj) and ("XMLS" in obj[0]):
             triples.append((prop, a, owl.DataProperty))
         else:
             triples.append((prop, a, owl.ObjectProperty))
@@ -116,7 +133,7 @@ def probeOntology(endpoint_url, graph_urn, final_dir):
             triples.append((prop, rdfs.range, obj[0]))
 
         # for drawing
-        prop_ = prop.split("/")[-1]
-        suj_ = [i.split('/')[-1] for i in suj]
-        obj_ = [i.split('/')[-1] for i in obj]
+        # prop_ = prop.split("/")[-1]
+        # suj_ = [i.split('/')[-1] for i in suj]
+        # obj_ = [i.split('/')[-1] for i in obj]
     return locals()
