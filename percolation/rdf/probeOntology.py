@@ -148,11 +148,12 @@ def probeOntology(endpoint_url, graph_urn, final_dir):
         # suj_ = [i.split('/')[-1] for i in suj]
         # obj_ = [i.split('/')[-1] for i in obj]
     # Drawing
+    print('started drawing')
     A = gv.AGraph(directed=True)
-    A.graph_attr["label"] = r"General diagram of ontological structure from %s in the http://purl.org/socialparticipation/participationontology/ namespace.\nGreen edge denotes existential restriction;\ninverted edge nip denotes universal restriction;\nfull edges (non-dashed) denote functional property."
+    A.graph_attr["label"] = r"General diagram of ontological structure from %s in the http://purl.org/socialparticipation/participationontology/ namespace.\nGreen edge denotes existential restriction;\ninverted edge nip denotes universal restriction;\nfull edge (non-dashed) denotes functional property."
     edge_counter = 1
     for aclass in classes:
-        aclass_ = aclass.split('\')[-1]
+        aclass_ = aclass.split('/')[-1]
         if aclass_ not in A.nodes():
             A.add_node(aclass_, style="filled")
             n = A.get_node(aclass_)
@@ -174,21 +175,21 @@ def probeOntology(endpoint_url, graph_urn, final_dir):
             if elabel_ not in functional_properties:
                 e.attr["style"] = "dashed"
             if neigh[0][i][0] in existential_restrictions.keys():
-                restriction = existential_restrictions[ex[0][i][0]]
+                restriction = existential_restrictions[neigh[0][i][0]]
                 prop = [iii[0] for iii in restriction]
                 obj = [iii[1] for iii in restriction]
                 if (elabel in prop) and (obj[prop.index(elabel)] == aclass):
                     e.attr["color"] = "#A0E0A0"
             if neigh[0][i][0] in universal_restrictions.keys():
-                restriction = universal_restrictions[ex[0][i][0]]
+                restriction = universal_restrictions[neigh[0][i][0]]
                 prop = [iii[0] for iii in restriction]
                 obj = [iii[1] for iii in restriction]
                 if (elabel in prop) and (obj[prop.index(elabel)] == aclass):
                     e.attr["color"] = "inv"
         for i in range(len(neigh[1])):  # consequents
-            label = ex[1][i][1].split("/")[-1]
-            elabel = ex[1][i][0]
-            elabel_ = elabel.split('/')
+            label = neigh[1][i][1].split("/")[-1]
+            elabel = neigh[1][i][0]
+            elabel_ = elabel.split('/')[-1]
             if "XMLS" in label:
                 label_ = edge_counter
                 edge_counter += 1
@@ -201,9 +202,9 @@ def probeOntology(endpoint_url, graph_urn, final_dir):
                 n = A.get_node(label_)
                 n.attr['label'] = label.split("#")[-1]
                 n.attr['color'] = color
-            A.add_edge(aclass, label_)
-            e = A.get_edge(aclass, label_)
-            e.attr["label"] = elabel
+            A.add_edge(aclass_, label_)
+            e = A.get_edge(aclass_, label_)
+            e.attr["label"] = elabel_
             e.attr["color"] = color
             e.attr["penwidth"] = 2
             if elabel not in functional_properties:
@@ -224,9 +225,12 @@ def probeOntology(endpoint_url, graph_urn, final_dir):
     A.draw(os.path.join(final_dir, "draw_circo.png"), prog="circo")
     A.draw(os.path.join(final_dir, "draw_fdp.png"), prog="fdp")
     A.draw(os.path.join(final_dir, "draw_twopi.png"), prog="twopi")
-    g = r.Graph()
-    for triple in triples:
-        g.add(triple)
+    # g = r.Graph()
+    # for triple in triples:
+    #     g.add(triple)
+    P.context('ontology', 'remove')
+    P.add(triples, 'ontology')
+    g = P.context('ontology')
     g.serialize(os.path.join(final_dir, 'ontology.owl'))
     g.serialize(os.path.join(final_dir, 'ontology.ttl', 'turtle'))
     return locals()
