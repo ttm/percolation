@@ -46,7 +46,44 @@ def probeOntology(endpoint_url, graph_urn, final_dir):
         consequent_property_ = mkQuery(q)
         neighbors[aclass] = (antecedent_property, consequent_property+consequent_property_)
         # neighbors[aclass] = (antecedent_property, dict(consequent_property, **consequent_property_))
+
         # class restrictions
+        q = "SELECT DISTINCT ?p WHERE {?s a <%s>. ?s ?p ?o .}" % (classe,)
+        props_c = mkQuery(q)
+        q = "SELECT DISTINCT ?s WHERE {?s a <%s>}" % (classe,)
+        inds = mkQuery(q)
+        for pc in props_c:
+            if '22-rdf-syntax' in pc:
+                continue
+            q = "SELECT DISTINCT ?s ?co  (datatype(?o) as ?do) WHERE {?s a <%s>. ?s <%s> ?o . OPTIONAL {?o a ?co . }}" % (aclass, pc)
+            inds2 = mkQuery(q, 0)
+            inds2_ = set([i["s"]["value"] for i in inds2])
+            objs = set([i["co"]["value"] for i in inds2 if "co" in i.keys()])
+            vals = set([i["do"]["value"] for i in inds2 if "do" in i.keys()])
+            if len(inds) == len(inds2_):  # existential
+                if len(vals):
+                    ob = vals[0]
+                else:
+                    ob = list(objs)[0]
+                B = r.BNode()
+                triples += [(aclass, rdfs.subClassOf, B),
+                            (B, rdf.type, owl.Restriction),
+                            (B, owl.onProperty, pc),
+                            (B, owl.someValuesFrom, ob)
+                            ]
+            query4 = "SELECT DISTINCT ?s WHERE { ?s <%s> ?o .}" % (pc,)
+            inds3 = mkQuery(query4)
+            if set(inds) == set(inds3):  # universal
+                if len(vals):
+                    ob = vals[0]
+                else:
+                    ob = list(objs)[0]
+                B = r.BNode()
+                triples += [(aclass, rdfs.subClassOf, B),
+                            (B, rdf.type, owl.Restriction),
+                            (B, owl.onProperty, pc),
+                            (B, owl.allValuesFrom, ob)
+                            ]
     del q, aclass, antecedent_property, consequent_property
     triples = []
     for prop in properties:
