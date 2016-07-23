@@ -30,7 +30,7 @@ P.client = None
 
 def start(start_session=True, endpoint_url=endpoint_url_):
     """Startup routine"""
-    c("eu", endpoint_url)
+    c("endpoint url", endpoint_url)
     if endpoint_url:
         P.client = P.rdf.sparql.Client(endpoint_url)
     else:

@@ -10,7 +10,7 @@ from percolation.rdf.sparql.functions import plainQueryValues as pl
 __doc__ = 'routine to probe ontology from rdf graph structures'
 
 
-def probeOntology(endpoint_url, graph_urns, final_dir):
+def probeOntology(endpoint_url, graph_urns, final_dir, one_datatype=True):
     if not os.path.isdir(final_dir):
         os.makedirs(final_dir)
 
@@ -40,7 +40,7 @@ def probeOntology(endpoint_url, graph_urns, final_dir):
     properties = mkQuery(q)
     # properties_ = [i.split("/")[-1] for i in properties]
 
-    c('antecedents and consequents of each class')
+    c('antecedents, consequents and restrictions of each class')
     neighbors = {}
     triples = []
     existential_restrictions = {}
@@ -48,10 +48,14 @@ def probeOntology(endpoint_url, graph_urns, final_dir):
     for aclass in classes:
         q = "SELECT DISTINCT ?cs ?p WHERE { ?i a <%s> . ?s ?p ?i . OPTIONAL { ?s a ?cs . } }" % (aclass,)
         antecedent_property = mkQuery(q)
-        q = "SELECT DISTINCT ?ap (datatype(?o) as ?do) WHERE { ?i a <%s> . ?i ?ap ?o . filter (datatype(?o) != '') }" % (aclass,)
-        consequent_property = mkQuery(q)
-        q = "SELECT DISTINCT ?ap ?co WHERE { ?i a <%s> . ?i ?ap ?o . ?o a ?co . }" % (aclass,)
-        consequent_property_ = mkQuery(q)
+        # q = "SELECT DISTINCT ?ap (datatype(?o) as ?do) WHERE { ?i a <%s> . ?i ?ap ?o . filter (datatype(?o) != '') }" % (aclass,)
+        # consequent_property = mkQuery(q)
+        # q = "SELECT DISTINCT ?ap ?co WHERE { ?i a <%s> . ?i ?ap ?o . ?o a ?co . }" % (aclass,)
+        # consequent_property_ = mkQuery(q)
+        q = "SELECT DISTINCT ?ap ?co (datatype(?o) as ?do) WHERE { ?i a <%s> . ?i ?ap ?o . OPTIONAL { ?o a ?co . } }" % (aclass,)
+        consequent_property__ = mkQuery(q, 0)
+        consequent_property = [[i['ap']['value'], i['do']['value']] for i in consequent_property__ if 'do' in i]
+        consequent_property_ = [[i['ap']['value'], i['co']['value']] for i in consequent_property__ if 'co' in i]
         neighbors[aclass] = (antecedent_property, consequent_property+consequent_property_)
         # neighbors[aclass] = (antecedent_property, dict(consequent_property, **consequent_property_))
 
@@ -60,15 +64,21 @@ def probeOntology(endpoint_url, graph_urns, final_dir):
         props_c = mkQuery(q)
         q = "SELECT DISTINCT ?s WHERE {?s a <%s>}" % (aclass,)
         inds = mkQuery(q)
+        q = "SELECT (COUNT(DISTINCT ?s) as ?cs) WHERE {?s a <%s>}" % (aclass,)
+        ninds = pl(client.retrieveQuery(q))[0]
         for pc in props_c:
             if '22-rdf-syntax' in pc:
                 continue
-            q = "SELECT DISTINCT ?s ?co  (datatype(?o) as ?do) WHERE {?s a <%s>. ?s <%s> ?o . OPTIONAL {?o a ?co . }}" % (aclass, pc)
+            # q = "SELECT DISTINCT ?s ?co  (datatype(?o) as ?do) WHERE {?s a <%s>. ?s <%s> ?o . OPTIONAL {?o a ?co . }}" % (aclass, pc)
+            q = "SELECT DISTINCT ?co (datatype(?o) as ?do) WHERE {?s a <%s>. ?s <%s> ?o . OPTIONAL {?o a ?co . }}" % (aclass, pc)
             inds2 = mkQuery(q, 0)
-            inds2_ = set([i["s"]["value"] for i in inds2])
+            # inds2_ = set([i["s"]["value"] for i in inds2])
             objs = set([i["co"]["value"] for i in inds2 if "co" in i.keys()])
             vals = set([i["do"]["value"] for i in inds2 if "do" in i.keys()])
-            if len(inds) == len(inds2_):  # existential
+            q = "SELECT (COUNT(DISTINCT ?s) as ?cs) WHERE {?s a <%s>. ?s <%s> ?o . }" % (aclass, pc)
+            ninds2 = pl(client.retrieveQuery(q))[0]
+            # if len(inds) == len(inds2_):  # existential
+            if ninds == ninds2:  # existential
                 if len(vals):
                     ob = list(vals)[0]
                 else:
@@ -88,9 +98,14 @@ def probeOntology(endpoint_url, graph_urns, final_dir):
                         existential_restrictions[aclass].append((pc, ob))
                     else:
                         existential_restrictions[aclass] = [(pc, ob)]
-            query4 = "SELECT DISTINCT ?s WHERE { ?s <%s> ?o .}" % (pc,)
-            inds3 = mkQuery(query4)
-            if set(inds) == set(inds3):  # universal
+            q = "SELECT (COUNT(DISTINCT ?s) as ?cs) WHERE { ?s <%s> ?o . ?s a ?ca . FILTER(str(?ca) != '%s') }" % (pc, aclass)
+            ninds3 = pl(client.retrieveQuery(q))[0]
+            # q = "SELECT DISTINCT ?s WHERE { ?s <%s> ?o .}" % (pc,)
+            # inds3 = mkQuery(q)
+            # if set(inds) == set(inds3):  # universal
+            # if all([i in set(inds) for i in inds3]):  # universal
+            # if ninds == ninds3:  # universal
+            if ninds3 == 0:  # universal
                 if len(vals):
                     ob = list(vals)[0]
                 else:
@@ -152,7 +167,14 @@ def probeOntology(endpoint_url, graph_urns, final_dir):
     # Drawing
     c('started drawing')
     A = gv.AGraph(directed=True, strict=False)
-    A.graph_attr["label"] = r"General diagram of ontological structure from %s in the http://purl.org/socialparticipation/participationontology/ namespace.\nGreen edge denotes existential restriction;\ninverted edge nip denotes universal restriction;\nfull edge (non-dashed) denotes functional property."
+    q = """PREFIX po: <http://purl.org/socialparticipation/po/>
+    SELECT DISTINCT ?snap WHERE { ?i po:snapshot ?snap }"""
+    snap = mkQuery(q)[0]
+    q = """PREFIX po: <http://purl.org/socialparticipation/po/>
+    SELECT ?provenance
+    WHERE { <%s> po:socialProtocolTag ?provenance }""" % (snap,)
+    provenance = pl(client.retrieveQuery(q))[0]
+    A.graph_attr["label"] = r"General diagram of ontological structure from %s in the http://purl.org/socialparticipation/participationontology/ namespace.\nGreen edge denotes existential restriction;\ninverted edge nip denotes universal restriction;\nfull edge (non-dashed) denotes functional property." % (provenance,)
     edge_counter = 1
     node_counter = 1
     data_nodes = {}
@@ -163,43 +185,48 @@ def probeOntology(endpoint_url, graph_urns, final_dir):
             n = A.get_node(aclass_)
             n.attr['color'] = "#A2F3D1"
         neigh = neighbors[aclass]
-        for i in range(len(neigh[0])):  # antecendents
-            label = neigh[0][i][0].split("/")[-1]
-            elabel = neigh[0][i][1]
-            elabel_ = elabel.split("/")[-1]
-            if label not in A.nodes():
-                A.add_node(label, style="filled")
-                n = A.get_node(label)
-                n.attr['color'] = "#A2F3D1"
-            ekey = '{}-{}-{}'.format(label, aclass_, edge_counter)
-            edge_counter += 1
-            A.add_edge(label, aclass_, ekey)
-            e = A.get_edge(label, aclass_, key=ekey)
-            e.attr["label"] = elabel_
-            e.attr["penwidth"] = 2.
-            e.attr["arrowsize"] = 2.
-            if elabel not in functional_properties:
-                e.attr["style"] = "dashed"
-            if neigh[0][i][0] in existential_restrictions.keys():
-                restriction = existential_restrictions[neigh[0][i][0]]
-                prop = [iii[0] for iii in restriction]
-                obj = [iii[1] for iii in restriction]
-                if (elabel in prop) and (obj[prop.index(elabel)] == aclass):
-                    e.attr["color"] = "#A0E0A0"
-            if neigh[0][i][0] in universal_restrictions.keys():
-                restriction = universal_restrictions[neigh[0][i][0]]
-                prop = [iii[0] for iii in restriction]
-                obj = [iii[1] for iii in restriction]
-                if (elabel in prop) and (obj[prop.index(elabel)] == aclass):
-                    e.attr["color"] = "inv"
+        # for i in range(len(neigh[0])):  # antecendents
+        #     label = neigh[0][i][0].split("/")[-1]
+        #     elabel = neigh[0][i][1]
+        #     elabel_ = elabel.split("/")[-1]
+        #     if label not in A.nodes():
+        #         A.add_node(label, style="filled")
+        #         n = A.get_node(label)
+        #         n.attr['color'] = "#A2F3D1"
+        #     ekey = '{}-{}-{}'.format(label, aclass_, edge_counter)
+        #     edge_counter += 1
+        #     A.add_edge(label, aclass_, ekey)
+        #     e = A.get_edge(label, aclass_, key=ekey)
+        #     e.attr["label"] = elabel_
+        #     e.attr["penwidth"] = 2.
+        #     e.attr["arrowsize"] = 2.
+        #     if elabel not in functional_properties:
+        #         e.attr["style"] = "dashed"
+        #     if neigh[0][i][0] in existential_restrictions.keys():
+        #         restriction = existential_restrictions[neigh[0][i][0]]
+        #         prop = [iii[0] for iii in restriction]
+        #         obj = [iii[1] for iii in restriction]
+        #         if (elabel in prop) and (obj[prop.index(elabel)] == aclass):
+        #             e.attr["color"] = "#A0E0A0"
+        #     if neigh[0][i][0] in universal_restrictions.keys():
+        #         restriction = universal_restrictions[neigh[0][i][0]]
+        #         prop = [iii[0] for iii in restriction]
+        #         obj = [iii[1] for iii in restriction]
+        #         if (elabel in prop) and (obj[prop.index(elabel)] == aclass):
+        #             e.attr["color"] = "inv"
         for i in range(len(neigh[1])):  # consequents
             label = neigh[1][i][1].split("/")[-1]
             elabel = neigh[1][i][0]
             elabel_ = elabel.split('/')[-1]
             if "XMLS" in label:
                 color = "#FFE4AA"
-                if label in data_nodes:
-                    label_ = data_nodes[label]
+                if one_datatype:
+                    if label in data_nodes:
+                        label_ = data_nodes[label]
+                    else:
+                        label_ = node_counter
+                        node_counter += 1
+                        data_nodes[label] = label_
                 else:
                     label_ = node_counter
                     node_counter += 1
@@ -218,17 +245,17 @@ def probeOntology(endpoint_url, graph_urns, final_dir):
             e.attr["label"] = elabel_
             e.attr["color"] = color
             e.attr["penwidth"] = 2
-            if elabel not in functional_properties:
+            if r.URIRef(elabel) not in functional_properties:
                 e.attr["style"] = "dashed"
             if aclass in existential_restrictions.keys():
-                restriction = existential_restrictions[aclass]
-                prop = [iii[0] for iii in restriction]
-                if elabel in prop:
+                restrictions = existential_restrictions[aclass]
+                prop = [iii[0] for iii in restrictions]
+                if r.URIRef(elabel) in prop:
                     e.attr["color"] = "#A0E0A0"
             if aclass in universal_restrictions.keys():
-                restriction = universal_restrictions[aclass]
-                prop = [iii[0] for iii in restriction]
-                if elabel in prop:
+                restrictions = universal_restrictions[aclass]
+                prop = [iii[0] for iii in restrictions]
+                if r.URIRef(elabel) in prop:
                     e.attr["arrowhead"] = "inv"
                     e.attr["arrowsize"] = 2.
 
@@ -236,9 +263,10 @@ def probeOntology(endpoint_url, graph_urns, final_dir):
     A.draw(os.path.join(final_dir, "draw_circo.png"), prog="circo")
     A.draw(os.path.join(final_dir, "draw_fdp.png"), prog="fdp")
     A.draw(os.path.join(final_dir, "draw_twopi.png"), prog="twopi")
+    A.write(os.path.join(final_dir, "draw_twopi.dot"))
     # for triple in triples:
     #     g.add(triple)
-    P.start()
+    P.start(False)
     P.context('ontology', 'remove')
     P.add(triples, 'ontology')
     g = P.context('ontology')
