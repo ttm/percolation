@@ -39,14 +39,6 @@ graphs_ += [
 ]
 graphs_ += [
     (
-     'urn:irc-legacy-hackerspace-cpsMeta.ttl',
-     'urn:irc-legacy-hackerspace-cpsLog00000.ttl',
-     'urn:irc-legacy-hackerspace-cpsLog00001.ttl',
-     'urn:irc-legacy-hackerspace-cpsLog00002.ttl',)
-]
-
-graphs_ += [
-    (
      'urn:gmane-legacy-.linux.audio.devel1-20000Email00000.ttl',
      'urn:gmane-legacy-.linux.audio.devel1-20000Email00001.ttl',
      'urn:gmane-legacy-.linux.audio.devel1-20000Email00002.ttl',
@@ -136,7 +128,7 @@ graphs_ += [
 endpoint_url = 'http://localhost:8890/sparql'
 
 
-for graphs in graphs_:
+for graphs in graphs_[-6:]:
     if 'Meta.' in graphs[0]:
         fvars = P.rdf.probeOntology(endpoint_url, graphs, 'ontologies/'+graphs[0].split(':')[1], one_datatype=False)
     else:

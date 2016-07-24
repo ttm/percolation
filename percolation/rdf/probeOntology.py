@@ -172,7 +172,8 @@ def probeOntology(endpoint_url, graph_urns, final_dir, one_datatype=True):
     snap = mkQuery(q)[0]
     q = """PREFIX po: <http://purl.org/socialparticipation/po/>
     SELECT ?provenance
-    WHERE { <%s> po:socialProtocolTag ?provenance }""" % (snap,)
+    WHERE { { <%s> po:socialProtocolTag ?provenance } UNION
+            { <%s> po:humanizedName ?provenance } }""" % (snap, snap)
     provenance = pl(client.retrieveQuery(q))[0]
     A.graph_attr["label"] = r"General diagram of ontological structure from %s in the http://purl.org/socialparticipation/participationontology/ namespace.\nGreen edge denotes existential restriction;\ninverted edge nip denotes universal restriction;\nfull edge (non-dashed) denotes functional property." % (provenance,)
     edge_counter = 1
@@ -259,11 +260,13 @@ def probeOntology(endpoint_url, graph_urns, final_dir, one_datatype=True):
                     e.attr["arrowhead"] = "inv"
                     e.attr["arrowsize"] = 2.
 
-    A.draw(os.path.join(final_dir, "draw.png"), prog="dot")
-    A.draw(os.path.join(final_dir, "draw_circo.png"), prog="circo")
-    A.draw(os.path.join(final_dir, "draw_fdp.png"), prog="fdp")
-    A.draw(os.path.join(final_dir, "draw_twopi.png"), prog="twopi")
-    A.write(os.path.join(final_dir, "draw_twopi.dot"))
+    A.draw(os.path.join(final_dir, "{}.png".format(final_dir)), prog="dot")
+    try:
+        A.draw(os.path.join(final_dir, "{}_circo.png".format(final_dir)), prog="circo")
+    except:
+        pass
+    A.draw(os.path.join(final_dir, "{}_twopi.png".format(final_dir)), prog="twopi", args="-Granksep=4")
+    A.write(os.path.join(final_dir, "{}.dot".format(final_dir)))
     # for triple in triples:
     #     g.add(triple)
     P.start(False)

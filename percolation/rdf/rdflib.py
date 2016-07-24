@@ -264,10 +264,13 @@ def ic(uriref, string, context=None, snapshoturi=None):
     P.add(triples,context=context)
     return uri
 
-def writeByChunks(filename="path/name_without_extension",context=None,format_="both",ntriples=100000,triples=None):
+def writeByChunks(filename="path/name_without_extension",context=None,format_="both",ntriples=100000,triples=None, bind=[]):
     if not triples:
         triples=context_(context)
     g_=r.Graph()
+    if bind:
+        for item in bind:
+            g_.namespace_manager.bind(item[0], item[1])
     triple_count=0
     chunk_count=0
     filenames_xml=[]
@@ -291,6 +294,8 @@ def writeByChunks(filename="path/name_without_extension",context=None,format_="b
             sizes_xml+=[filesize_xml]
             sizes_ttl+=[filesize_ttl]
             g_=r.Graph()
+            if bind:
+                g_.namespace_manager.bind(bind[0], bind[1])
             chunk_count+=1
     if len(g_):
         filename_="{}{:05d}".format(filename,chunk_count)
