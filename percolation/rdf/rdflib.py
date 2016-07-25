@@ -295,7 +295,8 @@ def writeByChunks(filename="path/name_without_extension",context=None,format_="b
             sizes_ttl+=[filesize_ttl]
             g_=r.Graph()
             if bind:
-                g_.namespace_manager.bind(bind[0], bind[1])
+                for item in bind:
+                    g_.namespace_manager.bind(item[0], item[1])
             chunk_count+=1
     if len(g_):
         filename_="{}{:05d}".format(filename,chunk_count)

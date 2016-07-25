@@ -107,7 +107,7 @@ class SparQLQueries:
     def updateQuery(self, querystring):
         """Query to insert, delete and modify knowledge
         https://www.w3.org/Submission/SPARQL-Update/"""
-        self.endpoint.method = "POST"
+        # self.endpoint.method = "POST"
         return self.performQuery(querystring)
 
     def performQuery(self, querystring):

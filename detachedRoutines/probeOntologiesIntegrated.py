@@ -128,7 +128,7 @@ graphs_ += [
 endpoint_url = 'http://localhost:8890/sparql'
 
 
-for graphs in graphs_[-6:]:
+for graphs in graphs_[3:5]:
     if 'Meta.' in graphs[0]:
         fvars = P.rdf.probeOntology(endpoint_url, graphs, 'ontologies/'+graphs[0].split(':')[1], one_datatype=False)
     else:
