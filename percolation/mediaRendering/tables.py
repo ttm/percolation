@@ -13,16 +13,16 @@ def fromDict(tdict, column_names, fname='', caption='', longtable=False, size='\
             for column_name in column_names[1:]:
                 val = vals[column_name]
                 if isinstance(val, float):
-                    row += " & %.2f " % (val,)
+                    row += " & {:,.2f} ".format(val,)
                 elif not val:
                     row += " & 0 "
                 else:
-                    row += " & %s " % (val,)
+                    row += " & {:,} ".format(val,)
         else:
             if isinstance(vals, float):
-                row += " & %.2f " % (vals,)
+                row += " & {:,.2f} ".format(vals,)
             else:
-                row += " & %s " % (vals,)
+                row += " & {:,} ".format(vals,)
         row += "\\\\\\hline\n"
         rows.append(row)
     string_table = ''.join(rows).replace('#', '\\#').replace('_', '\\_')
