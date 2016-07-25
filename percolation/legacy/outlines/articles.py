@@ -9,7 +9,7 @@ def outlineText(client):
     nedges = pl(client.retrieveQuery(prefix+'SELECT (COUNT(?interaction) as ?c) WHERE { { ?interaction a po:Friendship } UNION { ?interaction a po:Interaction } UNION { ?interaction po:retweetOf ?message } UNION { ?interaction po:replyTo ?message } UNION { ?interaction po:directedTo ?participant } . }'))[0]
     nparticipants = pl(client.retrieveQuery(prefix+'SELECT (COUNT(DISTINCT ?author) as ?c) WHERE { ?author a po:Participant . }'))[0]
     nchars = pl(client.retrieveQuery(prefix+'SELECT (SUM(?nchars) as ?total) WHERE { ?message po:nChars ?nchars . }'))[0]
-    text = 'Database consists of {} triples, {} edges yield by interactions or relations, {} participants and {} characters.'.format(ntriples, nedges, nparticipants, nchars)
+    text = 'The LOSD database consists of {:,} triples, {:,} edges yield by interactions or relations, {:,} participants and {:,} characters.'.format(ntriples, nedges, nparticipants, nchars)
 
     nego = pl(client.retrieveQuery(prefix+'SELECT (COUNT(?snap) as ?csnap) WHERE { ?snap po:isEgo true }'))[0]
     ngroup = pl(client.retrieveQuery(prefix+'SELECT (COUNT(?snap) as ?csnap) WHERE { ?snap po:isGroup true }'))[0]

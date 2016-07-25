@@ -30,15 +30,9 @@ def probeOntology(endpoint_url, graph_urns, final_dir, one_datatype=True):
            return result['results']['bindings']
 
     c('find all classes')
-    q = "SELECT DISTINCT ?o WHERE { ?s rdf:type ?o . }"
+    q = "SELECT DISTINCT ?class WHERE { ?s a ?class . }"
     # classes = pl(client.retrieveQuery(prefix+q))
     classes = mkQuery(q)
-
-    c('find properties')
-    q = "SELECT DISTINCT ?p WHERE {?s ?p ?o}"
-    # properties = pl(client.retrieveQuery(prefix+q))
-    properties = mkQuery(q)
-    # properties_ = [i.split("/")[-1] for i in properties]
 
     c('antecedents, consequents and restrictions of each class')
     neighbors = {}
@@ -62,8 +56,8 @@ def probeOntology(endpoint_url, graph_urns, final_dir, one_datatype=True):
         # class restrictions
         q = "SELECT DISTINCT ?p WHERE {?s a <%s>. ?s ?p ?o .}" % (aclass,)
         props_c = mkQuery(q)
-        q = "SELECT DISTINCT ?s WHERE {?s a <%s>}" % (aclass,)
-        inds = mkQuery(q)
+        # q = "SELECT DISTINCT ?s WHERE {?s a <%s>}" % (aclass,)
+        # inds = mkQuery(q)
         q = "SELECT (COUNT(DISTINCT ?s) as ?cs) WHERE {?s a <%s>}" % (aclass,)
         ninds = pl(client.retrieveQuery(q))[0]
         for pc in props_c:
@@ -126,6 +120,13 @@ def probeOntology(endpoint_url, graph_urns, final_dir, one_datatype=True):
                     else:
                         universal_restrictions[aclass] = [(pc, ob)]
     del q, aclass, antecedent_property, consequent_property
+    c('find properties')
+    q = "SELECT DISTINCT ?p WHERE {?s ?p ?o}"
+    # properties = pl(client.retrieveQuery(prefix+q))
+    properties = mkQuery(q)
+    # properties_ = [i.split("/")[-1] for i in properties]
+
+    c('check if property is functional and get range and domain')
     functional_properties = set()
     for prop in properties:
         # check if property is functional
