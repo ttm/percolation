@@ -169,7 +169,8 @@ def probeOntology(endpoint_url, graph_urns, final_dir, one_datatype=True):
     c('started drawing')
     A = gv.AGraph(directed=True, strict=False)
     q = """PREFIX po: <http://purl.org/socialparticipation/po/>
-    SELECT DISTINCT ?snap WHERE { ?i po:snapshot ?snap }"""
+    SELECT DISTINCT ?snap WHERE { { ?i po:snapshot ?snap } UNION { ?snap po:snapshotID ?idfoo } }"""
+    # SELECT DISTINCT ?snap WHERE { ?i po:snapshot ?snap }"""
     snap = mkQuery(q)[0]
     q = """PREFIX po: <http://purl.org/socialparticipation/po/>
     SELECT ?provenance
@@ -177,7 +178,7 @@ def probeOntology(endpoint_url, graph_urns, final_dir, one_datatype=True):
     # WHERE { { <%s> po:socialProtocolTag ?provenance } UNION
     #         { <%s> po:humanizedName ?provenance } }""" % (snap, snap)
     provenance = pl(client.retrieveQuery(q))[0]
-    A.graph_attr["label"] = r"General diagram of ontological structure from %s in the http://purl.org/socialparticipation/participationontology/ namespace.\nGreen edge denotes existential restriction;\ninverted edge nip denotes universal restriction;\nfull edge (non-dashed) denotes functional property." % (provenance,)
+    # A.graph_attr["label"] = r"General diagram of ontological structure from %s in the http://purl.org/socialparticipation/participationontology/ namespace.\nGreen edge denotes existential restriction;\ninverted edge nip denotes universal restriction;\nfull edge (non-dashed) denotes functional property." % (provenance,)
     edge_counter = 1
     node_counter = 1
     data_nodes = {}

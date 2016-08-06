@@ -5,11 +5,6 @@ import percolation as P
 # graphs_ = [('urn:facebook-legacy-AntonioAnzoategui18022013Friendship.ttl', 'urn:facebook-legacy-AntonioAnzoategui18022013Meta.ttl')]
 graphs_ = [('urn:facebook-legacy-AntonioAnzoategui18022013Friendship.ttl',)]
 graphs_ += [
-    ('urn:facebook-legacy-Auricultura10042013Friendship.ttl',
-     'urn:facebook-legacy-Auricultura10042013Interaction.ttl',
-     'urn:facebook-legacy-Auricultura10042013Posts.ttl')
-]
-graphs_ += [
     (
      'urn:facebook-legacy-Auricultura10042013Meta.ttl',
      'urn:facebook-legacy-Auricultura10042013Friendship.ttl',
@@ -17,7 +12,9 @@ graphs_ += [
      'urn:facebook-legacy-Auricultura10042013Posts.ttl')
 ]
 graphs_ += [
-    ('urn:twitter-legacy-arenaNETmundialTweet00000.ttl',),
+    ('urn:facebook-legacy-Auricultura10042013Friendship.ttl',
+     'urn:facebook-legacy-Auricultura10042013Interaction.ttl',
+     'urn:facebook-legacy-Auricultura10042013Posts.ttl')
 ]
 graphs_ += [
     (
@@ -26,9 +23,7 @@ graphs_ += [
     ),
 ]
 graphs_ += [
-    ('urn:irc-legacy-hackerspace-cpsLog00000.ttl',
-     'urn:irc-legacy-hackerspace-cpsLog00001.ttl',
-     'urn:irc-legacy-hackerspace-cpsLog00002.ttl',)
+    ('urn:twitter-legacy-arenaNETmundialTweet00000.ttl',),
 ]
 graphs_ += [
     (
@@ -38,22 +33,27 @@ graphs_ += [
      'urn:irc-legacy-hackerspace-cpsLog00002.ttl',)
 ]
 graphs_ += [
+    ('urn:irc-legacy-hackerspace-cpsLog00000.ttl',
+     'urn:irc-legacy-hackerspace-cpsLog00001.ttl',
+     'urn:irc-legacy-hackerspace-cpsLog00002.ttl',)
+]
+graphs_ += [
     (
-     'urn:gmane-legacy-.linux.audio.devel1-20000Email00000.ttl',
-     'urn:gmane-legacy-.linux.audio.devel1-20000Email00001.ttl',
-     'urn:gmane-legacy-.linux.audio.devel1-20000Email00002.ttl',
-     'urn:gmane-legacy-.linux.audio.devel1-20000Email00003.ttl',
-     'urn:gmane-legacy-.linux.audio.devel1-20000Email00004.ttl',
+     'urn:email-legacy-linux.audio.devel1-20000Meta.ttl',
+     'urn:email-legacy-linux.audio.devel1-20000Email00000.ttl',
+     'urn:email-legacy-linux.audio.devel1-20000Email00001.ttl',
+     'urn:email-legacy-linux.audio.devel1-20000Email00002.ttl',
+     'urn:email-legacy-linux.audio.devel1-20000Email00003.ttl',
+     'urn:email-legacy-linux.audio.devel1-20000Email00004.ttl',
     )
 ]
 graphs_ += [
     (
-     'urn:gmane-legacy-.linux.audio.devel1-20000Meta.ttl',
-     'urn:gmane-legacy-.linux.audio.devel1-20000Email00000.ttl',
-     'urn:gmane-legacy-.linux.audio.devel1-20000Email00001.ttl',
-     'urn:gmane-legacy-.linux.audio.devel1-20000Email00002.ttl',
-     'urn:gmane-legacy-.linux.audio.devel1-20000Email00003.ttl',
-     'urn:gmane-legacy-.linux.audio.devel1-20000Email00004.ttl',
+     'urn:email-legacy-linux.audio.devel1-20000Email00000.ttl',
+     'urn:email-legacy-linux.audio.devel1-20000Email00001.ttl',
+     'urn:email-legacy-linux.audio.devel1-20000Email00002.ttl',
+     'urn:email-legacy-linux.audio.devel1-20000Email00003.ttl',
+     'urn:email-legacy-linux.audio.devel1-20000Email00004.ttl',
     )
 ]
 graphs_ += [
@@ -128,8 +128,9 @@ graphs_ += [
 endpoint_url = 'http://localhost:8890/sparql'
 
 
-for graphs in graphs_[3:5]:
+for graphs in graphs_[7:9]:
     if 'Meta.' in graphs[0]:
-        fvars = P.rdf.probeOntology(endpoint_url, graphs, 'ontologies/'+graphs[0].split(':')[1], one_datatype=False)
+        fvars = P.rdf.probeOntology(endpoint_url, graphs[:1], 'ontologies/'+graphs[0].split(':')[1])
+        # fvars = P.rdf.probeOntology(endpoint_url, graphs[:1], 'ontologies/'+graphs[0].split(':')[1], one_datatype=False)
     else:
         fvars = P.rdf.probeOntology(endpoint_url, graphs, 'ontologies/'+graphs[0].split(':')[1])

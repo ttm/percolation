@@ -21,8 +21,10 @@ def fromDict(tdict, column_names, fname='', caption='', longtable=False, size='\
         else:
             if isinstance(vals, float):
                 row += " & {:,.2f} ".format(vals,)
-            else:
+            elif isinstance(vals, int):
                 row += " & {:,} ".format(vals,)
+            else:
+                row += " & {} ".format(vals,)
         row += "\\\\\\hline\n"
         rows.append(row)
     string_table = ''.join(rows).replace('#', '\\#').replace('_', '\\_')
@@ -45,7 +47,7 @@ def encapsulateLongTable(string_table, caption, size):
     header += '\\multicolumn{{{}}}{{c}}'.format(ncolumns)+'{\\tablename\\ \\thetable\\ -- \\textit{Continued from previous page}} \\\\\\hline\n'
     header += rows[0]+'\\hline\\hline\\endhead\n'
     # header += '\\hline\\endhead\n'
-    header += '\\hline \\multicolumn{'+str(ncolumns)+'}{r}{\\textit{Continued on next page}} \\\\\n\\endfoot\\hline\\endlastfoot\n'
+    header += '\\multicolumn{'+str(ncolumns)+'}{r}{\\textit{Continued on next page}} \\\\\n\\endfoot\\endlastfoot\n'
     footer = '\\end{longtable}\n\\end{center}'
     string_table_ = '\\hline'.join(rows[1:])
     table = header+string_table_+footer

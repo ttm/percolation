@@ -174,7 +174,7 @@ def plainQueryValues(result_dict, join_queries=False):
                     if result[key]["datatype"] == (NS.xsd.integer).toPython():
                         value = int(value)
                     elif result[key]["datatype"] == \
-                            (NS.xsd.datetime).toPython():
+                            (NS.xsd.dateTime).toPython():
                         pass
                     elif result[key]["datatype"] == (NS.xsd.date).toPython():
                         pass

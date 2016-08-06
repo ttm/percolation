@@ -56,6 +56,7 @@ class NS:
     U=   r.URIRef
 a=NS.rdf.type
 po=NS.po
+prefix = 'PREFIX po: <http://purl.org/socialparticipation/po/>\n'
 
 def timestampedURI(uriref=None,stringid="",datetime_=None):
     if not datetime:
