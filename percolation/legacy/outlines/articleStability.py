@@ -21,8 +21,25 @@ def authorsTable(client, final_path=os.path.dirname(__file__)+'/../../../../stab
             ?message po:author ?author .
             ?message a po:EmailMessage .
             ?message po:snapshot ?snap .
-            ?snap po:gmaneID "%s" } GROUP BY ?author'''
-            author_messages = c.OrderedDict(sorted(list_datastructures.author_messages.items(), key=lambda x: len(x[1])))
+            ?snap po:gmaneID "%s" } GROUP BY ?author''' % (lacronyms[alist],)
+            authors_messages = pl(client.retrieveQuery(prefix+q))
+            stats[alist] = P.measures.authors.authorsStatistics.AuthorsStatistics(authors_messages)
+        P.utils.pDump(stats, pickledir+'authorsStatistics.pickle')
+    else:
+        stats = P.utils.pRead(pickledir+'authorsStatistics.pickle')
+    data_ = []
+    for i in order:
+        ae = stats[i]
+        h_act = "{:.2f}".format(ae.n_msgs_h_)
+        q1 = "{:.2f} ({:.2f}\\%)".format(ae.q1_*100, ae.Mq1*100)
+        q3 = "{:.2f} ({:.2f}\\%)".format(ae.q3_*100, ae.Mq3*100)
+        last_d10 = "{:.2f} (-{:.2f}\\%)".format(ae.last_d10_*100, ae.Mlast_d10*100)
+        data_.append([h_act, q1, q3, last_d10])
+    tstring = P.mediaRendering.tables.makeTabular(order, data_, True)
+    P.mediaRendering.tables.writeTex(tstring, final_path+"userTabNEW.tex")
+    return stats
+
+
 def circularTables(client, final_path=os.path.dirname(__file__)+'/../../../../stabilityInteraction/tables/', pickledir=os.path.dirname(__file__)+'/../../../pickledir/'):
     # get datetimes from sent
     # try toPython
