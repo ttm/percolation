@@ -3,6 +3,7 @@ from percolation.rdf.sparql.functions import plainQueryValues as pl
 from percolation.rdf import prefix
 import os
 import dateutil.parser
+import numpy as n
 prefix = 'PREFIX po: <http://purl.org/socialparticipation/po/>\n'
 lacronyms = {'LAU': "gmane.linux.audio.users",
              'CPP': "gmane.comp.gcc.libstdc++.devel",
@@ -11,13 +12,112 @@ lacronyms = {'LAU': "gmane.linux.audio.users",
 order = ['LAU', 'LAD', 'MET', 'CPP']
 
 # def circularTable(client, final_path='../../../stabilityInteraction/tables/', pickledir='../../../pickledir/'):
+def pcaTables(client, final_path=os.path.dirname(__file__)+'/../../../../stabilityInteraction/tables/', pickledir=os.path.dirname(__file__)+'/../../../pickledir/'):
+    VE1=[]
+    VE2=[]
+    VE3=[]
+    VA1=[]
+    VA2=[]
+    VA3=[]
+    labels1=["$cc$","$k$","$bt$","$\\lambda$"]
+    labels2=["$cc$","$s$","$s^{in}$","$s^{out}$",
+             "$k$","$k^{in}$","$k^{out}$","$bt$","$\\lambda$"]
+    labels3=["$cc$","$s$","$s^{in}$","$s^{out}$",
+             "$k$","$k^{in}$","$k^{out}$","$bt$",
+             "$asy$", "$\\mu^{asy}$","$\\sigma^{asy}$",
+             "$dis$","$\\mu^{dis}$","$\\sigma^{dis}$","$\\lambda$"]
+    # from networkEvolution function in this file
+    nes = P.utils.pRead(pickledir+'evolutionStructures.pickle')
+    # for lid, ne in zip(dl.downloaded_lists, NEs):
+    for alist in order:
+        ne = nes[alist]
+        evec1 = n.abs(n.array([pca.pca1.eig_vectors_ for pca in ne.networks_pcas]))
+        evec2 = n.abs(n.array([pca.pca2.eig_vectors_ for pca in ne.networks_pcas]))
+        evec3 = n.abs(n.array([pca.pca3.eig_vectors_ for pca in ne.networks_pcas]))
+        eval1 = n.abs(n.array([ pca.pca1.eig_values_ for pca in ne.networks_pcas]))
+        eval2 = n.abs(n.array([ pca.pca2.eig_values_ for pca in ne.networks_pcas]))
+        eval3 = n.abs(n.array([ pca.pca3.eig_values_ for pca in ne.networks_pcas]))
+
+        VE1.append(evec1)
+        VE2.append(evec2)
+        VE3.append(evec3)
+
+        VA1.append(eval1)
+        VA2.append(eval2)
+        VA3.append(eval3)
+
+        m1 = evec1.mean(0)
+        s1 = evec1.std(0)
+        m1_ = eval1.mean(0)
+        s1_ = eval1.std(0)
+
+        m2 = evec2[:,:,:3].mean(0)
+        s2 = evec2[:,:,:3].std(0)
+        m2_ = eval2[:,:3].mean(0)
+        s2_ = eval2[:,:3].std(0)
+
+        m3 = evec3[:,:,:3].mean(0)
+        s3 = evec3[:,:,:3].std(0)
+        m3_ = eval3[:,:3].mean(0)
+        s3_ = eval3[:,:3].std(0)
+
+        # make table with each mean and std
+        #t1=n.zeros((m1.shape[0],6))
+        #t1[:,::2]=m1
+        #t1[:,1::2]=s1
+        #t1_=n.zeros(6)
+        #t1_[::2]=m1_
+        #t1_[1::2]=s1_
+        #tab_data=n.vstack((t1,t1_))
+        label = alist
+        tstring = P.mediaRendering.tables.pcaTable(labels1, m1, s1, m1_, s1_)
+        P.mediaRendering.tables.writeTex(tstring,final_path+"tabPCA1{}NEW.tex".format(label))
+        tstring = P.mediaRendering.tables.pcaTable(labels2, m2, s2, m2_, s2_)
+        P.mediaRendering.tables.writeTex(tstring,final_path+"tabPCA2{}NEW.tex".format(label))
+        tstring = P.mediaRendering.tables.pcaTable(labels3,m3,s3,m3_,s3_)
+        P.mediaRendering.tables.writeTex(tstring,final_path+"tabPCA3{}NEW.tex".format(label))
+def networksEvolution(client, pickledir=os.path.dirname(__file__)+'/../../../pickledir/'):
+    # get all interactions
+    ans = input('try to reload evolution structures? (Y/n)')
+    if ans == 'n' or not os.path.isfile(pickledir+'evolutionStructures.pickle'):
+        nes = {}
+        for alist in order:
+            # q = '''select distinct ?from ?message where {
+            #        ?message po:createdAt ?date .
+            #        ?message po:author ?from .
+            #        ?snap po:gmaneID "%s" } ORDER BY ?date''' % (lacronyms[alist],) 
+            # from_msg = pl(client.retrieveQuery(prefix+q))
+            q = '''select distinct ?message ?participant where {
+                   ?message po:author ?participant .
+                   ?message po:createdAt ?date .
+                   ?message po:snapshot ?snap .
+                   ?snap po:gmaneID "%s" } ORDER BY ?date''' % (lacronyms[alist],) 
+            from_ = pl(client.retrieveQuery(prefix+q))
+            q = '''select ?message ?rmessage where {
+                   ?rmessage po:createdAt ?date .
+                   ?rmessage po:replyTo ?message .
+                   ?rmessage po:snapshot ?snap .
+                   ?snap po:gmaneID "%s" } ORDER BY ?date''' % (lacronyms[alist],) 
+            replies = pl(client.retrieveQuery(prefix+q))
+            # instantiate evolutive class
+            ne = P.measures.evolution.networkEvolution.NetworkEvolution(window_size=1000, step_size=1000)
+            ne.load(from_, replies)
+            ne.evolve()
+            nes[alist] = ne
+            print('evolved '+alist)
+        P.utils.pDump(nes, pickledir+'evolutionStructures.pickle')
+    else:
+        nes = P.utils.pRead(pickledir+'evolutionStructures.pickle')
+    # send interactions to evolutive class
+    # evolutive class makes networks and takes measures
+
+
 def authorsTable(client, final_path=os.path.dirname(__file__)+'/../../../../stabilityInteraction/tables/', pickledir=os.path.dirname(__file__)+'/../../../pickledir/'):
     ans = input('try to reload authors statistics? (Y/n)')
     if ans == 'n' or not os.path.isfile(pickledir+'authorsStatistics.pickle'):
         stats = {}
         for alist in order:
-            q = '''PREFIX po: <http://purl.org/socialparticipation/po/> 
-            select distinct ?author (COUNT(distinct ?message) as ?cmessage) where {
+            q = '''select distinct ?author (COUNT(distinct ?message) as ?cmessage) where {
             ?message po:author ?author .
             ?message a po:EmailMessage .
             ?message po:snapshot ?snap .

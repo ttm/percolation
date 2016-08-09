@@ -107,8 +107,7 @@ if __name__ == '__main__':
                 ?friendshipfoo a po:Friendship .
                 ?friendshipfoo po:member ?friend1 .
                 ?friendshipfoo po:member ?friend2 .
-                }}
-        '''.format(snapshot, )
+                }}'''.format(snapshot, )
         friends = P.rdf.sparql.functions.plainQueryValues(client.retrieveQuery(prefix+q))
         g = x.Graph()
         for friend1, friend2 in friends:

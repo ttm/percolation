@@ -1,4 +1,5 @@
 import re
+import numpy as n
 
 
 def fromDict(tdict, column_names, fname='', caption='', longtable=False, size='\\scriptsize'):
@@ -197,3 +198,20 @@ def partialSums(labels, data, partials, partial_labels="", datarow_labels=""):
     footer = "\\hline\\end{tabular}\n\\end{center}"
     ltable = header+ltable+footer
     return ltable
+
+
+def pcaTable(labels, vec_mean, vec_std, val_mean, val_std):
+    """Make table with PCA formation mean and std"""
+    header = "\\begin{center}\n\\begin{tabular}{| l |"+" c |"*6+"}\\cline{2-7}\n"
+    header += "\\multicolumn{1}{c|}{} & \\multicolumn{2}{c|}{PC1}          & \multicolumn{2}{c|}{PC2} & \multicolumn{2}{c|}{PC3}  \\\\\\cline{2-7}"
+    header += "\\multicolumn{1}{c|}{} & $\mu$            & $\sigma$ & $\mu$         & $\sigma$ & $\mu$ & $\sigma$  \\\\\\hline\n"
+    tt = n.zeros((vec_mean.shape[0], 6))
+    tt[:,::2] = vec_mean
+    tt[:,1::2] = vec_std
+    tt_ = n.zeros(6)
+    tt_[::2] = val_mean
+    tt_[1::2] = val_std
+    tab_data = n.vstack((tt,tt_))
+    footer = "\\hline\\end{tabular}\n\\end{center}"
+    table = header + makeTabular(labels, tab_data, True) + footer
+    return table

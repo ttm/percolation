@@ -70,6 +70,7 @@ def validateUrl(url_candidate):
 
 def toUndirected(xgraph):
     gg = x.Graph()
+    gg.add_nodes_from(xgraph)
     gg.add_edges_from(xgraph.edges_iter(), weight=0)
 
     for u, v, d in xgraph.edges_iter(data=True):
@@ -149,3 +150,7 @@ def pRead(tfilename):
     with open(tfilename,"rb") as f:
         tobject=pickle.load(f)
     return tobject
+
+
+class EmptyClass:
+    pass
