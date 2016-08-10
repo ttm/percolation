@@ -12,13 +12,13 @@ lacronyms = {'LAU': "gmane.linux.audio.users",
 order = ['LAU', 'LAD', 'MET', 'CPP']
 
 # def circularTable(client, final_path='../../../stabilityInteraction/tables/', pickledir='../../../pickledir/'):
-def evolutionTimelines(client, final_path=os.path.dirname(__file__)+'/../../../../stabilityInteraction/tables/', pickledir=os.path.dirname(__file__)+'/../../../pickledir/'):
+def evolutionTimelines(client, final_path=os.path.dirname(__file__)+'/../../../../stabilityInteraction/figs/', pickledir=os.path.dirname(__file__)+'/../../../pickledir/'):
     sizes=[50,100,250,500,1000,3300,9900]
     # make sectorialization for each size for LAD and CPP networks
     # make plot with them
     order = 'LAD', 'CPP'
     nes = {}
-    ans = input('try to reload evolution structures? (Y/n)')
+    ans = input('try to reload evolution structures for timelines? (Y/n)')
     if ans == 'n' or not os.path.isfile(pickledir+'evolutionStructuresTimeline.pickle'):
         for alist in order:
             nes[alist] = []
@@ -48,7 +48,12 @@ def evolutionTimelines(client, final_path=os.path.dirname(__file__)+'/../../../.
         nes = P.utils.pRead(pickledir+'evolutionStructuresTimeline.pickle')
     for alist in nes:
         for ne in nes[alist]:
-            P.mediaRendering.figures.EvolutionTimelines(alist, ne)
+            et = P.mediaRendering.figures.EvolutionTimelines(alist, ne, final_path=final_path)
+            if ne.window_size == 1000:
+                et.plotSingles()
+
+
+
 def pcaTables(client, final_path=os.path.dirname(__file__)+'/../../../../stabilityInteraction/tables/', pickledir=os.path.dirname(__file__)+'/../../../pickledir/'):
     VE1=[]
     VE2=[]
@@ -113,6 +118,9 @@ def pcaTables(client, final_path=os.path.dirname(__file__)+'/../../../../stabili
         P.mediaRendering.tables.writeTex(tstring,final_path+"tabPCA2{}NEW.tex".format(label))
         tstring = P.mediaRendering.tables.pcaTable(labels3,m3,s3,m3_,s3_)
         P.mediaRendering.tables.writeTex(tstring,final_path+"tabPCA3{}NEW.tex".format(label))
+        if alist == 'LAU':
+            ns = ne.networks_sectorializations[13]
+            ne.networks_pcas[13].pca3.plotSym(ns, final_path+'../figs/', 'im13PCAPLOTNEW.png')
 def networksEvolution(client, pickledir=os.path.dirname(__file__)+'/../../../pickledir/'):
     # get all interactions
     ans = input('try to reload evolution structures? (Y/n)')

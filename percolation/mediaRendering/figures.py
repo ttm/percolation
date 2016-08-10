@@ -38,9 +38,9 @@ class EvolutionTimelines:
                 n_agents = nm.N
                 agents["totals"].append(n_agents)
                 # minimum_incidence=data["np"].minimum_incidence
-                minimum_incidence = self.network_evolution.networks_sectorializations.minimum_incidence
+                minimum_incidence = self.network_evolution.networks_sectorializations[i].minimum_incidence
                 # agents["s"].append(data["np"].sectorialized_agents__)
-                agents["s"].append(self.network_evolution.networks_sectorializations.sectorialized_agents__)
+                agents["s"].append(self.network_evolution.networks_sectorializations[i].sectorialized_agents__)
                 agents["is"].append(
                         NetworkSectorialization(nm,minimum_incidence=minimum_incidence,metric="is").sectorialized_agents__ )
                 agents["os"].append(
@@ -56,15 +56,15 @@ class EvolutionTimelines:
                 # d, id, od, is, os
                 # e mandar eles para uma função que já calcula
                 # os particionamentos compostos
-                compound=compoundSectorialization(agents)
+                compound = compoundSectorialization(agents)
                 agents["exc"].append(compound["exc"])
                 agents["excc"].append(compound["excc"])
                 agents["exce"].append(compound["exce"])
                 agents["inc"].append(compound["inc"])
                 agents["incc"].append(compound["incc"])
                 agents["ince"].append(compound["ince"])
-        self.agents=agents
-    def plotFracs(self,ttype,subplot,ate,step_size):
+        self.agents = agents
+    def plotFracs(self,ttype,subplot,ate,step_size, intext=False):
         p.subplot(subplot)
         p.title(ttype)
         if ttype == "degree": ttype_="d"
@@ -81,11 +81,19 @@ class EvolutionTimelines:
             ttype_="exc"
             not_classified=list([1-sum(self.fractionLengths(i,total)) 
                 for i,total in zip(self.agents[ttype_],self.agents["totals"])])
-            p.plot(list(range(0,ate,step_size))[:-1],not_classified,"k-.x")
+            # p.plot(list(range(0,ate,step_size))[:-1],not_classified,"k-.x")
+            if intext:
+                p.plot(list(range(0,ate,step_size)), not_classified,"k-.x")
+            else:
+                p.plot(list(range(0,ate,step_size)), not_classified,"k")
         if ttype == "inclusivist":
             ttype_="inc"
             super_classified=list([sum(self.fractionLengths(i,total))-1 for i,total in zip(self.agents[ttype_],self.agents["totals"])])
-            p.plot(list(range(0,ate,step_size))[:-1],super_classified,"k-.x")
+            # p.plot(list(range(0,ate,step_size))[:-1],super_classified,"k-.x")
+            if intext:
+                p.plot(list(range(0, ate, step_size)), super_classified,"k-.x")
+            else:
+                p.plot(list(range(0, ate, step_size)), super_classified,"k")
         if ttype == "exclusivist cascade": 
             ttype_="excc"
             p.ylabel(r"fraction of nodes in each section $\rightarrow$")
@@ -98,21 +106,31 @@ class EvolutionTimelines:
         if ttype == "inclusivist externals": 
             ttype_="ince"
             p.xlabel(r"messages $\rightarrow$")
-        fractions=[self.fractionLengths(i,total) for i,total in zip(self.agents[ttype_],self.agents["totals"])]
-        hubs_fractions=[i[2] for i in fractions]
-        intermediary_fractions=[i[1] for i in fractions]
-        periphery_fractions=[i[0] for i in fractions]
+        fractions = [self.fractionLengths(i,total) for i,total in zip(self.agents[ttype_], self.agents["totals"])]
+        hubs_fractions = [i[2] for i in fractions]
+        intermediary_fractions = [i[1] for i in fractions]
+        periphery_fractions = [i[0] for i in fractions]
         print(list(range(0,ate,step_size)),periphery_fractions)
         print(len(list(range(0,ate,step_size))),
               len(periphery_fractions))
         #p.plot(list(range(0,ate,step_size))[:-1],periphery_fractions,   "b")
         #p.plot(list(range(0,ate,step_size))[:-1],intermediary_fractions,"g")
         #p.plot(list(range(0,ate,step_size))[:-1],hubs_fractions,        "r")
-        p.plot(list(range(0,ate,step_size))[:-1],periphery_fractions,   "ko-",ms=8,alpha=.7,label="periphery")
-        p.plot(list(range(0,ate,step_size))[:-1],intermediary_fractions,"k^-",ms=8,alpha=.7,label="intermediary")
-        p.plot(list(range(0,ate,step_size))[:-1],hubs_fractions,        "k*-",ms=10,alpha=.7,label="hubs")
+        # p.plot(list(range(0,ate,step_size))[:-1],periphery_fractions,   "ko-",ms=8,alpha=.7,label="periphery")
+        # p.plot(list(range(0,ate,step_size))[:-1],intermediary_fractions,"k^-",ms=8,alpha=.7,label="intermediary")
+        # p.plot(list(range(0,ate,step_size))[:-1],hubs_fractions,        "k*-",ms=10,alpha=.7,label="hubs")
+        if intext:
+            p.plot(list(range(0,ate,step_size)), periphery_fractions,   "ko-",ms=8,alpha=.7,label="periphery")
+            p.plot(list(range(0,ate,step_size)), intermediary_fractions,"k^-",ms=8,alpha=.7,label="intermediary")
+            p.plot(list(range(0,ate,step_size)), hubs_fractions,        "k*-",ms=10,alpha=.7,label="hubs")
+        else:
+            p.plot(list(range(0,ate,step_size)), periphery_fractions,    "b")
+            p.plot(list(range(0,ate,step_size)), intermediary_fractions, "g")
+            p.plot(list(range(0,ate,step_size)), hubs_fractions,         "r")
         p.ylim(0,1.)
-        p.xlim(-5,ate-1700+5)
+        p.xticks((0, 5000, 10000, 15000))
+        # p.xlim(-5,ate-1700+100)
+        p.xlim(-5, ate)
     def plotMeasure(self,title,subplot,ate,step_size):
         if subplot=="5,2,10":
             p.subplot(5,2,10)
@@ -151,20 +169,22 @@ class EvolutionTimelines:
         #fig.set_size_inches(10.5,3.4) ###
         p.figure(figsize=(10.,4.))
         #ate=self.overall[1][0].n_messages-self.overall[0]["window_size"]
-        ate=self.overall[1][0].n_messages
-        step_size=self.overall[0]["step_size"]
+        # ate=self.overall[1][0].n_messages
+        ate = 20000 - self.network_evolution.window_size
+        # step_size=self.overall[0]["step_size"]
+        step_size = self.network_evolution.step_size
         p.suptitle(r"Empirical fractions of participants in each of the Erdös sectors")
         #p.suptitle((r"Fraction of participants in each Erdös Sector. Window: %i messages."+"\nPlacement resolution: %i messages. %s") % (self.overall[0]["window_size"],step_size,self.label))
 
-        self.plotFracs("degree",     "221",ate,step_size)
-        p.ylabel(r"$\overline{e_{1,x}} \;\rightarrow$",fontsize=20)
-        self.plotFracs("strength",   "223",ate,step_size)
-        p.ylabel(r"$\overline{e_{4,x}} \;\rightarrow$",fontsize=20)
+        self.plotFracs("degree",     "221",ate,step_size, intext=True)
+        p.ylabel(r"$\overline{e_{1,\phi}} \;\rightarrow$",fontsize=20)
+        self.plotFracs("strength",   "223",ate,step_size, intext=True)
+        p.ylabel(r"$\overline{e_{4,\phi}} \;\rightarrow$",fontsize=20)
         p.xlabel(r"messages $\;\rightarrow$",fontsize=15)
-        self.plotFracs("exclusivist","222",ate,step_size)
-        p.ylabel(r"$\overline{c_{1,x}} \;\rightarrow$",fontsize=20)
-        self.plotFracs("inclusivist","224",ate,step_size)
-        p.ylabel(r"$\overline{c_{2,x}} \;\rightarrow$",fontsize=20)
+        self.plotFracs("exclusivist","222",ate,step_size, intext=True)
+        p.ylabel(r"$\overline{c_{1,\phi}} \;\rightarrow$",fontsize=20)
+        self.plotFracs("inclusivist","224",ate,step_size, intext=True)
+        p.ylabel(r"$\overline{c_{2,\phi}} \;\rightarrow$",fontsize=20)
         p.xlabel(r"messages $\;\rightarrow$",fontsize=15)
         #fig.set_size_inches(5.5,16.4) ###
 
@@ -173,7 +193,8 @@ class EvolutionTimelines:
         p.plot([],[],        "k-.x",label="without sector or ambiguous")
         p.legend(bbox_to_anchor=(-0.98, 2.7, 1.75, .1), loc=4,
                            ncol=4, mode="expand", borderaxespad=0.,fontsize=10,frameon=False)
-        filename="InText-W{}-S{}NEW.png".format(self.label,self.overall[0]["window_size"],step_size)
+        # filename="InText-W{}-S{}NEW.png".format(self.label,self.overall[0]["window_size"],step_size)
+        filename="InText-W{}-S{}NEW.png".format(self.label, self.network_evolution.window_size, step_size)
         # legenda no superior direito
         tname="{}{}".format(self.final_path, filename)
         p.savefig(tname)
@@ -182,7 +203,8 @@ class EvolutionTimelines:
     def plotFirstPage(self):
         p.clf()
         fig = matplotlib.pyplot.gcf()
-        fig.set_size_inches(7.,8.4)
+        # fig.set_size_inches(7.,8.4)
+        fig.set_size_inches(7.,5.4)
         # step_size=self.overall[0]["step_size"]
         step_size = self.network_evolution.step_size
         window_size = self.network_evolution.window_size
@@ -200,8 +222,9 @@ class EvolutionTimelines:
         # self.plotMeasure("number of edges","528",ate,step_size)
         # self.plotMeasure("number of vertices","529",ate,step_size)
         # self.plotMeasure("center, periphery and discon.","5,2,10",ate,step_size)
-        p.subplots_adjust(left=0.105,bottom=0.05,right=0.98,top=0.9,wspace=0.28,hspace=0.69)
-        filename="{}-W{}-S{}.png".format(self.label, window_size,step_size)
+        # p.subplots_adjust(left=0.105,bottom=0.05,right=0.98,top=0.9,wspace=0.28,hspace=0.69)
+        p.subplots_adjust(left=0.09,bottom=0.08,right=0.99,top=0.86,wspace=0.28,hspace=0.55)
+        filename="{}-W{}-S{}NEW.png".format(self.label, window_size,step_size)
         p.savefig("{}{}".format(self.final_path, filename))
         # simple plot:
         p.clf()
@@ -216,7 +239,7 @@ class EvolutionTimelines:
         self.plotFracs("exclusivist externals","325",ate,step_size)
         self.plotFracs("inclusivist externals","326",ate,step_size)
         p.subplots_adjust(left=0.09,bottom=0.08,right=0.99,top=0.86,wspace=0.28,hspace=0.55)
-        filename="{}-W{}-S{}_.png".format(self.label, window_size, step_size)
+        filename="{}-W{}-S{}_NEW.png".format(self.label, window_size, step_size)
         p.savefig("{}{}".format(self.final_path, filename))
 
     def drawTimelines(self):

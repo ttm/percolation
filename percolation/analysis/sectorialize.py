@@ -76,9 +76,7 @@ def compoundSectorialization(agents):
 
 class NetworkSectorialization:
     network_count=0
-    def __init__(self,networkMeasures=None, minimum_incidence=1,metric="strength"):
-        if not networkMeasures:
-            networkMeasures=g.NetworkMeasures()
+    def __init__(self, networkMeasures, minimum_incidence=1,metric="strength"):
         self.metric=metric
         metric_=self.standardizeName(metric)
 
@@ -250,7 +248,7 @@ class NetworkSectorialization:
                 rlimit+=1
                 llimit=rlimit
             else: # last bin
-                print("last bin less probable than prob_min")
+                # print("last bin less probable than prob_min")
                 rlimit=len(incident_degrees_)-1
                 bins.append((llimit,rlimit))
                 prob_empirical=sum(

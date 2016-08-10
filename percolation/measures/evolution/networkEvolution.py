@@ -50,8 +50,9 @@ class NetworkEvolution:
                 pca = P.analysis.pca.NetworkPCA(measures)
                 self.networks_pcas.append(pca)
             if sectorialize:
-                minimum_incidence = max(1, int(measures.N*0.02))
-                sectorialization = P.analysis.sectorialize.NetworkSectorialization(measures, self.minimum_incidence)
+                # minimum_incidence = max(1, int(measures.N*0.02))
+                minimum_incidence = 2
+                sectorialization = P.analysis.sectorialize.NetworkSectorialization(measures, minimum_incidence)
                 del sectorialization.binomial
                 self.networks_sectorializations.append(sectorialization)
             pointer += self.step_size
