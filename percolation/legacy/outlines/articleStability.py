@@ -12,6 +12,43 @@ lacronyms = {'LAU': "gmane.linux.audio.users",
 order = ['LAU', 'LAD', 'MET', 'CPP']
 
 # def circularTable(client, final_path='../../../stabilityInteraction/tables/', pickledir='../../../pickledir/'):
+def evolutionTimelines(client, final_path=os.path.dirname(__file__)+'/../../../../stabilityInteraction/tables/', pickledir=os.path.dirname(__file__)+'/../../../pickledir/'):
+    sizes=[50,100,250,500,1000,3300,9900]
+    # make sectorialization for each size for LAD and CPP networks
+    # make plot with them
+    order = 'LAD', 'CPP'
+    nes = {}
+    ans = input('try to reload evolution structures? (Y/n)')
+    if ans == 'n' or not os.path.isfile(pickledir+'evolutionStructuresTimeline.pickle'):
+        for alist in order:
+            nes[alist] = []
+            q = '''select distinct ?message ?participant where {
+                   ?message po:author ?participant .
+                   ?message po:createdAt ?date .
+                   ?message po:snapshot ?snap .
+                   ?snap po:gmaneID "%s" } ORDER BY ?date''' % (lacronyms[alist],) 
+            from_ = pl(client.retrieveQuery(prefix+q))
+            q = '''select ?message ?rmessage where {
+                   ?rmessage po:createdAt ?date .
+                   ?rmessage po:replyTo ?message .
+                   ?rmessage po:snapshot ?snap .
+                   ?snap po:gmaneID "%s" } ORDER BY ?date''' % (lacronyms[alist],) 
+            replies = pl(client.retrieveQuery(prefix+q))
+            for size in sizes:
+                if size >= 250:
+                    step_size = size
+                else:
+                    step_size = 200
+                ne = P.measures.evolution.networkEvolution.NetworkEvolution(window_size=size, step_size=step_size)
+                ne.load(from_, replies)
+                ne.evolve(pca=False)
+                nes[alist].append(ne)
+        P.utils.pDump(nes, pickledir+'evolutionStructuresTimeline.pickle')
+    else:
+        nes = P.utils.pRead(pickledir+'evolutionStructuresTimeline.pickle')
+    for alist in nes:
+        for ne in nes[alist]:
+            P.mediaRendering.figures.EvolutionTimelines(alist, ne)
 def pcaTables(client, final_path=os.path.dirname(__file__)+'/../../../../stabilityInteraction/tables/', pickledir=os.path.dirname(__file__)+'/../../../pickledir/'):
     VE1=[]
     VE2=[]
@@ -110,6 +147,7 @@ def networksEvolution(client, pickledir=os.path.dirname(__file__)+'/../../../pic
         nes = P.utils.pRead(pickledir+'evolutionStructures.pickle')
     # send interactions to evolutive class
     # evolutive class makes networks and takes measures
+    return nes
 
 
 def authorsTable(client, final_path=os.path.dirname(__file__)+'/../../../../stabilityInteraction/tables/', pickledir=os.path.dirname(__file__)+'/../../../pickledir/'):

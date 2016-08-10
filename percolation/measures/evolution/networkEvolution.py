@@ -34,7 +34,7 @@ class NetworkEvolution:
                     else:
                         g.add_edge(participant0, participant, weight=1)
         return g
-    def evolve(self, sectorialize=True):
+    def evolve(self, sectorialize=True, pca = True):
         self.networks = []
         self.networks_measures = []
         self.networks_pcas = []
@@ -44,12 +44,14 @@ class NetworkEvolution:
             mids = self.messageids[pointer:pointer+self.window_size]
             network = self.makeNetwork(mids)
             measures = self.takeMeasures(network)
-            pca = P.analysis.pca.NetworkPCA(measures)
             self.networks.append(network)
             self.networks_measures.append(measures)
-            self.networks_pcas.append(pca)
+            if pca:
+                pca = P.analysis.pca.NetworkPCA(measures)
+                self.networks_pcas.append(pca)
             if sectorialize:
-                sectorialization = P.analysis.sectorialize.NetworkSectorialization(measures)
+                minimum_incidence = max(1, int(measures.N*0.02))
+                sectorialization = P.analysis.sectorialize.NetworkSectorialization(measures, self.minimum_incidence)
                 del sectorialization.binomial
                 self.networks_sectorializations.append(sectorialization)
             pointer += self.step_size
