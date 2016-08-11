@@ -4,6 +4,8 @@ from percolation.rdf import prefix
 import os
 import dateutil.parser
 import numpy as n
+import networkx as x
+import social as S
 prefix = 'PREFIX po: <http://purl.org/socialparticipation/po/>\n'
 lacronyms = {'LAU': "gmane.linux.audio.users",
              'CPP': "gmane.comp.gcc.libstdc++.devel",
@@ -12,6 +14,219 @@ lacronyms = {'LAU': "gmane.linux.audio.users",
 order = ['LAU', 'LAD', 'MET', 'CPP']
 
 # def circularTable(client, final_path='../../../stabilityInteraction/tables/', pickledir='../../../pickledir/'):
+def extraNetworks(final_path=os.path.dirname(__file__)+'/../../../../stabilityInteraction/tables/', pickledir=os.path.dirname(__file__)+'/../../../pickledir/', social_path=os.path.dirname(__file__)+'/../../../../social/'):
+
+    ans = input('try to reload extra networks and analysis? (Y/n)')
+    if ans == 'n' or not os.path.isfile(pickledir+'extraNetworks.pickle'):
+        fg = S.utils.GDFgraph(social_path+'data/facebook/avlab_RenatoFabbri22022014.gdf') # graph should be on fg.G
+        fg2 = S.utils.GDFgraph(social_path+'data/facebook/ego_MassimoCanevacci19062013.gdf') # graph should be on fg.G
+        fg3 = S.utils.GDFgraph(social_path+'data/facebook/DemocraciaDiretaJa14072013.gdf') # graph should be on fg.G
+        fg4 = S.utils.GDFgraph(social_path+'data/facebook/SiliconValleyGlobalNetwork27042013.gdf') # graph should be on fg.G
+        fg5 = x.read_graphml(social_path+'data/extraData/amizadesParticipa.graphml') # graph should be on fg.G
+
+        fd = S.utils.GDFgraph(social_path+'data/facebook/SiliconValleyGlobalNetwork27042013_interactions.gdf') # graph should be on fg.G
+        fd2 = S.utils.GDFgraph(social_path+'data/facebook/SolidarityEconomy12042013_interactions.gdf') # graph should be on fg.G
+        fd3 = S.utils.GDFgraph(social_path+'data/facebook/DemocraciaDiretaJa14072013_interactions.gdf') # graph should be on fg.G
+        fd4 = S.utils.GDFgraph(social_path+'data/facebook/CienciasComFronteiras29032013_interactions.gdf') # graph should be on fg.G
+        fd5 = x.read_graphml(social_path+'data/extraData/interacoesParticipa.graphml') # graph should be on fg.G
+
+        tweets = S.twitter.pickle2rdf.readPickleTweetFile(social_path+'data/twitter/arenaNETmundial_tw.pickle')[0]
+        G,G_ = S.utils.makeRetweetNetwork(tweets)
+        F=[fg.G,fg2.G,fg3.G,fg4.G,fg5,fd.G,fd2.G,fd3.G,fd4.G,fd5,G,G_]
+
+        def part(network):
+            class NetworkMeasures_:
+                pass
+            nm=nm=NetworkMeasures_()
+            nm.degrees=network.degree()
+            nm.nodes_= sorted(network.nodes(), key=lambda x : nm.degrees[x])
+            nm.degrees_=[nm.degrees[i] for i in nm.nodes_]
+            nm.edges=     network.edges(data=True)
+            nm.E=network.number_of_edges()
+            nm.N=network.number_of_nodes()
+            np=g.NetworkPartitioning(nm,10,metric="g")
+            return np
+
+        parts=[]
+        fracs=[]
+        print("iniciando particionamentos")
+        for net in F:
+            pp=part(net)
+            parts.append(pp)
+            ll=[len(i) for i in pp.sectorialized_agents__]
+            ll=[100*i/sum(ll) for i in ll]
+            fracs.append(ll)
+
+        def pca(network):
+            class NetworkMeasures_:
+                pass
+            nm=nm=NetworkMeasures_()
+            nm.degrees=network.degree()
+            nm.nodes_= sorted(network.nodes(), key=lambda x : nm.degrees[x])
+            nm.degrees_=[nm.degrees[i] for i in nm.nodes_]
+
+            nm.gu=network.to_undirected()
+            if network.is_directed():
+                nm.weighted_directed_betweenness=x.betweenness_centrality(network,weight="weight")
+                nm.weighted_clusterings=x.clustering( nm.gu ,weight="weight")
+                nm.strengths=     network.degree(weight="weight")
+                nm.strengths_=[nm.strengths[i] for i in nm.nodes_]
+            else:
+                nm.weighted_directed_betweenness=x.betweenness_centrality(network)
+                nm.weighted_clusterings=x.clustering( nm.gu )
+            nm.weighted_directed_betweenness_=[
+              nm.weighted_directed_betweenness[i] for i in nm.nodes_]
+
+            nm.weighted_clusterings_=[nm.weighted_clusterings[i] for i in nm.nodes_]
+            if network.is_directed():
+                nm.in_degrees=network.in_degree()
+                nm.in_degrees_=[nm.in_degrees[i] for i in nm.nodes_]
+                nm.out_degrees=network.out_degree()
+                nm.out_degrees_=[nm.out_degrees[i] for i in nm.nodes_]
+                nm.in_strengths= network.in_degree(weight="weight")
+                nm.in_strengths_=[nm.in_strengths[i] for i in nm.nodes_]
+                nm.out_strengths=network.out_degree(weight="weight")
+                nm.out_strengths_=[nm.out_strengths[i] for i in nm.nodes_]
+
+            nm.edges=     network.edges(data=True)
+            nm.E=network.number_of_edges()
+            nm.N=network.number_of_nodes()
+
+
+            # symmetry measures
+            if network.is_directed():
+                nm.asymmetries=asymmetries=[]
+                nm.disequilibrium=disequilibriums=[]
+                nm.asymmetries_edge_mean=asymmetries_edge_mean=[]
+                nm.asymmetries_edge_std=asymmetries_edge_std=[]
+                nm.disequilibrium_edge_mean=disequilibrium_edge_mean=[]
+                nm.disequilibrium_edge_std=disequilibrium_edge_std=[]
+                for node in nm.nodes_:
+                    if not nm.degrees[node]:
+                        asymmetries.append(0.)
+                        disequilibriums.append( 0.)
+                        asymmetries_edge_mean.append(0.)
+                        asymmetries_edge_std .append(0.)    
+                        disequilibrium_edge_mean.append(0.)
+                        disequilibrium_edge_std.append(0.)
+                    else:
+                        asymmetries.append(
+                            (nm.in_degrees[node]-nm.out_degrees[node])/nm.degrees[node])
+                        disequilibriums.append( 
+                            (nm.in_strengths[node]-nm.out_strengths[node])/nm.strengths[node])
+                        edge_asymmetries=ea=[]
+                        edge_disequilibriums=ed=[]
+                        predecessors=network.predecessors(node)
+                        successors=  network.successors(node)
+                        for pred in predecessors:
+                            if pred in successors:
+                                ea.append( 0. )
+                                ed.append((network[pred][node]['weight']-network[node][pred]['weight'])/nm.strengths[node])
+                            else:
+                                ea.append( 1. )
+                                ed.append(network[pred][node]['weight']/nm.strengths[node])
+                        for suc in successors:
+                            if suc in predecessors:
+                                pass
+                            else:
+                                ea.append(-1.)
+                                ed.append(-network[node][suc]['weight']/nm.strengths[node])
+                        asymmetries_edge_mean.append(   n.mean(ea))
+                        asymmetries_edge_std .append(   n.std(ea))  
+                        disequilibrium_edge_mean.append(n.mean(ed))
+                        disequilibrium_edge_std.append( n.std(ed)) 
+            np = P.analysis.pca.NetworkPCA(nm)
+            return np
+        pcas=[]
+        for net in F:
+            pp=pca(net)
+            pcas.append(pp)
+            print("+1pca de net de F")
+        for pa in parts: del pa.binomial
+        # P.utils.pDump(F,pickledir+"F.pickle")
+        # P.utils.pDump(pcas,pickledir+"pcasFB-TW.pickle")
+        # P.utils.pDump(parts,pickledir+"partsFB-TW.pickle")
+        # P.utils.pDump(fracs,pickledir+"fracsFB-TW.pickle")
+        P.utils.pDump((F, pcas, parts, fracs), pickledir+"extraNetworks.pickle")
+    else:
+        F, pcas, parts, fracs = P.utils.pRead(pickledir+"extraNetworks.pickle")
+
+    labels1=["$cc$","$k$","$bt$","$\\lambda$"]
+    labels2=["$cc$","$s$","$s^{in}$","$s^{out}$",
+             "$k$","$k^{in}$","$k^{out}$","$bt$","$\\lambda$"]
+    labels3=["$cc$","$s$","$s^{in}$","$s^{out}$",
+             "$k$","$k^{in}$","$k^{out}$","$bt$",
+             "$asy$", "$\\mu^{asy}$","$\\sigma^{asy}$",
+             "$dis$","$\\mu^{dis}$","$\\sigma^{dis}$","$\\lambda$"]
+    labels_=["F1","F2","F3","F4","F5",
+            "I1","I2","I3","I4","I5",
+            "TT1","TT2"]
+
+    # for i, label in enumerate(labels_):
+    #     pca=pcas[i]
+    #     vals=n.vstack((pca.pca1.eig_vectors_, pca.pca1.eig_values_))
+    #     tstring=g.makeTables(labels1,vals)
+    #     g.writeTex(tstring,TDIR+"tabPCA1{}.tex".format(label))
+
+    # montar matriz de dados unica, 3 x nlistas = 27 colunas x 4 colunas
+    NF = 5 # number of friendship networks
+    NI = len(labels_)-NF # number of interaction networks
+    nn = n.zeros((4,NF*3))
+    for i in range(NF):
+        pca=pcas[i]
+        nn[:,i::NF]=n.abs(n.vstack((pca.pca1.eig_vectors_,pca.pca1.eig_values_)))
+
+    tstring=g.makeTables(labels1,nn,True)
+    g.writeTex(tstring,TDIR+"tabPCA1ExtraF.tex")
+
+    nn_=n.zeros((4,NI*3))
+    for i in range(NI):
+        pca=pcas[i+NF]
+        nn_[:,i::NI]=n.abs(n.vstack((pca.pca1.eig_vectors_,pca.pca1.eig_values_)))
+
+    tstring=g.makeTables(labels1,nn_,True)
+    g.writeTex(tstring,TDIR+"tabPCA1ExtraI.tex")
+
+
+
+    nn2=n.zeros((9,len(labels_[5:])*3))
+    for i in range(5,len(labels_)):
+        pca=pcas[i]
+        nn2[:,i-5::len(labels_[5:])]=n.abs(n.vstack((pca.pca2.eig_vectors_[:,:3],pca.pca2.eig_values_[:3])))
+    tstring2=g.makeTables(labels2,nn2,True)
+    g.writeTex(tstring2,TDIR+"tabPCA2Extra.tex")
+
+
+    nn3=n.zeros((15,len(labels_[5:])*3))
+    for i in range(5,len(labels_)):
+        pca=pcas[i]
+        nn3[:,i-5::len(labels_[5:])]=n.abs(n.vstack((pca.pca3.eig_vectors_[:,:3],pca.pca3.eig_values_[:3])))
+    tstring3=g.makeTables(labels3,nn3,True)
+    g.writeTex(tstring3,TDIR+"tabPCA3Extra.tex")
+
+    tstring3=g.makeTables(labels_,n.array(fracs),True)
+    g.writeTex(tstring3,TDIR+"tabSectorsExtra.tex")
+
+
+    # Tabela geral sobre cada lista com:
+    # sigla, proveniencia, critério para formação de aresta, dirigida ou nao, description, número de vertices, numero de arestas 
+    data = [["F1", "Facebook","friendship","no","the friendship network of Renato Fabbri (author)",str(F[0].number_of_nodes()),str(F[0].number_of_edges())],
+            ["F2", "Facebook","friendship","no","the friendship network of Massimo Canevacci (senior anthropologist)",str(F[1].number_of_nodes()),str(F[1].number_of_edges())],
+            ["F3", "Facebook","friendship","no","the friendship network of a brazilian direct democracy group",str(F[2].number_of_nodes()),str(F[2].number_of_edges())],
+            ["F4", "Facebook","friendship","no","the friendship network of the Silicon Valley Global Network group",str(F[3].number_of_nodes()),str(F[3].number_of_edges())],
+            ["F5", "Participa.br","friendship","no","the friendship network of a brazilian federal social participation portal",str(F[4].number_of_nodes()),str(F[4].number_of_edges())],
+            ["I1", "Facebook","interaction","yes","the interaction network of the Silicon Valley Global Network group",str(F[5].number_of_nodes()),str(F[5].number_of_edges())],
+            ["I2", "Facebook","interaction","yes","the interaction network of a Solidarity Economy group",str(F[6].number_of_nodes()),str(F[6].number_of_edges())],
+            ["I3", "Facebook","interaction","yes","the interaction network of a brazilian direct democracy group",str(F[7].number_of_nodes()),str(F[7].number_of_edges())],
+            ["I4", "Facebook","interaction","yes","the interaction network of the 'Cience with Frontiers' group",str(F[8].number_of_nodes()),str(F[8].number_of_edges())],
+            ["I5", "Participa.br","interaction","yes","the interaction network of a brazilian federal social participation portal",str(F[9].number_of_nodes()),str(F[9].number_of_edges())],
+            ["TT1", "Twitter","retweet","yes","the retweet network of $\\approx 22k$ tweets with the hashtag \#arenaNETmundial",str(F[10].number_of_nodes()),str(F[10].number_of_edges())],
+            ["TT2", "Twitter","retweet","yes","same as TT1, but disconnected agents are not discarded",str(F[11].number_of_nodes()),str(F[11].number_of_edges())]]
+    data_=[i[1:] for i in data]
+    tstring3=g.makeTables(labels_,data_)
+    g.writeTex(tstring3,TDIR+"tabExtra.tex")
+
+
 def evolutionTimelines(client, final_path=os.path.dirname(__file__)+'/../../../../stabilityInteraction/figs/', pickledir=os.path.dirname(__file__)+'/../../../pickledir/'):
     sizes=[50,100,250,500,1000,3300,9900]
     # make sectorialization for each size for LAD and CPP networks
