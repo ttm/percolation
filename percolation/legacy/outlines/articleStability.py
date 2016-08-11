@@ -44,7 +44,8 @@ def extraNetworks(final_path=os.path.dirname(__file__)+'/../../../../stabilityIn
             nm.edges=     network.edges(data=True)
             nm.E=network.number_of_edges()
             nm.N=network.number_of_nodes()
-            np=g.NetworkPartitioning(nm,10,metric="g")
+            # np=g.NetworkPartitioning(nm,10,metric="g")
+            np=P.analysis.sectorialize.NetworkSectorialization(nm,10,metric="g")
             return np
 
         parts=[]
@@ -96,7 +97,7 @@ def extraNetworks(final_path=os.path.dirname(__file__)+'/../../../../stabilityIn
             # symmetry measures
             if network.is_directed():
                 nm.asymmetries=asymmetries=[]
-                nm.disequilibrium=disequilibriums=[]
+                nm.disequilibriums=disequilibriums=[]
                 nm.asymmetries_edge_mean=asymmetries_edge_mean=[]
                 nm.asymmetries_edge_std=asymmetries_edge_std=[]
                 nm.disequilibrium_edge_mean=disequilibrium_edge_mean=[]
@@ -176,37 +177,33 @@ def extraNetworks(final_path=os.path.dirname(__file__)+'/../../../../stabilityIn
         pca=pcas[i]
         nn[:,i::NF]=n.abs(n.vstack((pca.pca1.eig_vectors_,pca.pca1.eig_values_)))
 
-    tstring=g.makeTables(labels1,nn,True)
-    g.writeTex(tstring,TDIR+"tabPCA1ExtraF.tex")
+    tstring = P.mediaRendering.tables.makeTabular(labels1,nn,True)
+    P.mediaRendering.tables.writeTex(tstring,final_path+"tabPCA1ExtraFNEW.tex")
 
     nn_=n.zeros((4,NI*3))
     for i in range(NI):
         pca=pcas[i+NF]
         nn_[:,i::NI]=n.abs(n.vstack((pca.pca1.eig_vectors_,pca.pca1.eig_values_)))
 
-    tstring=g.makeTables(labels1,nn_,True)
-    g.writeTex(tstring,TDIR+"tabPCA1ExtraI.tex")
-
-
+    tstring=P.mediaRendering.tables.makeTabular(labels1,nn_,True)
+    P.mediaRendering.tables.writeTex(tstring,final_path+"tabPCA1ExtraINEW.tex")
 
     nn2=n.zeros((9,len(labels_[5:])*3))
     for i in range(5,len(labels_)):
         pca=pcas[i]
         nn2[:,i-5::len(labels_[5:])]=n.abs(n.vstack((pca.pca2.eig_vectors_[:,:3],pca.pca2.eig_values_[:3])))
-    tstring2=g.makeTables(labels2,nn2,True)
-    g.writeTex(tstring2,TDIR+"tabPCA2Extra.tex")
-
+    tstring2=P.mediaRendering.tables.makeTabular(labels2,nn2,True)
+    P.mediaRendering.tables.writeTex(tstring2,final_path+"tabPCA2ExtraNEW.tex")
 
     nn3=n.zeros((15,len(labels_[5:])*3))
     for i in range(5,len(labels_)):
         pca=pcas[i]
         nn3[:,i-5::len(labels_[5:])]=n.abs(n.vstack((pca.pca3.eig_vectors_[:,:3],pca.pca3.eig_values_[:3])))
-    tstring3=g.makeTables(labels3,nn3,True)
-    g.writeTex(tstring3,TDIR+"tabPCA3Extra.tex")
+    tstring3=P.mediaRendering.tables.makeTabular(labels3,nn3,True)
+    P.mediaRendering.tables.writeTex(tstring3,final_path+"tabPCA3ExtraNEW.tex")
 
-    tstring3=g.makeTables(labels_,n.array(fracs),True)
-    g.writeTex(tstring3,TDIR+"tabSectorsExtra.tex")
-
+    tstring3=P.mediaRendering.tables.makeTabular(labels_,n.array(fracs),True)
+    P.mediaRendering.tables.writeTex(tstring3,final_path+"tabSectorsExtraNEW.tex")
 
     # Tabela geral sobre cada lista com:
     # sigla, proveniencia, critério para formação de aresta, dirigida ou nao, description, número de vertices, numero de arestas 
@@ -223,8 +220,8 @@ def extraNetworks(final_path=os.path.dirname(__file__)+'/../../../../stabilityIn
             ["TT1", "Twitter","retweet","yes","the retweet network of $\\approx 22k$ tweets with the hashtag \#arenaNETmundial",str(F[10].number_of_nodes()),str(F[10].number_of_edges())],
             ["TT2", "Twitter","retweet","yes","same as TT1, but disconnected agents are not discarded",str(F[11].number_of_nodes()),str(F[11].number_of_edges())]]
     data_=[i[1:] for i in data]
-    tstring3=g.makeTables(labels_,data_)
-    g.writeTex(tstring3,TDIR+"tabExtra.tex")
+    tstring3=P.mediaRendering.tables.makeTabular(labels_,data_)
+    P.mediaRendering.tables.writeTex(tstring3,final_path+"tabExtraNEW.tex")
 
 
 def evolutionTimelines(client, final_path=os.path.dirname(__file__)+'/../../../../stabilityInteraction/figs/', pickledir=os.path.dirname(__file__)+'/../../../pickledir/'):
