@@ -1,1 +1,1 @@
-from . import directMeasures, erdosSectors, makeNetwork, powerLawFit
+from . import directMeasures, erdosSectors, powerLawFit

@@ -4,8 +4,126 @@ import datetime
 import shutil
 import numpy as n
 import nltk as k
-from percolation.rdf import NS, po, c
+import pygraphviz as gv
+from percolation.rdf import NS, po, c, add, a
 import percolation as P
+import rdflib as r
+owl = NS.owl
+rdfs = NS.rdfs
+
+class Ontology:
+    """Designed to be used by aavo/src/ontology.py"""
+
+    def __init__(self, triples, namespaces = {}, terms = {}):
+        self.g = g = r.Graph()
+        self.terms = terms
+        self.bindNamespaces(namespaces)
+        for triple in triples:
+            g.add(triple)
+            # add subject as class:
+            g.add([triple[0], a, owl.Class])
+            # add predicate as property
+            if triple[2].startswith("http://www.w3.org/2001/XMLSchema#"):
+                g.add([triple[1], a, owl.DatatypeProperty])
+            else:
+                g.add([triple[1], a, owl.ObjectProperty])
+                # add object as class?!
+                g.add([triple[2], a, owl.Class])
+            self.addLabels(triple)
+
+    def bindNamespaces(self, namespaces):
+        for namespace in namespaces:
+            self.g.namespace_manager.bind(namespace, namespaces[namespace])
+
+    def mkLabel(self, term):
+        term_ = term.split('/')[-1]
+        if term_ in self.terms:
+            label = self.terms[term_]
+        else:
+            words = re.findall(r'[A-Z]?[a-z]+|[A-Z]+(?=[A-Z]|$)', term_)
+            label = " ".join(words)
+            if term_[0].islower():
+                label = label.lower()
+        return r.Literal(label)
+
+    def addLabels(self, triple):
+        self.g.add([triple[0], rdfs.label, self.mkLabel(triple[0])])
+        if not triple[1].startswith('http://www.w3.org/2002/07/owl#'):
+            self.g.add([triple[1], rdfs.label, self.mkLabel(triple[1])])
+        if not triple[2].startswith("http://www.w3.org/2001/XMLSchema#"):
+            self.g.add([triple[2], rdfs.label, self.mkLabel(triple[2])])
+
+    def render(self, path="./"):
+        """Render RDF and/or figures"""
+        apath = os.path.join(path, "rdf")
+        if not os.path.isdir(apath):
+            os.mkdir(apath)
+        ttlf = os.path.join(apath, "aavo0.01.ttl")
+        self.g.serialize(ttlf, "turtle")
+        owlf = os.path.join(apath, "aavo0.01.owl")
+        self.g.serialize(owlf, "xml")
+        self.renderFigs(path)
+
+    def renderFigs(self, path):
+        apath = os.path.join(path, "figs")
+        datacounter = 0
+        A = gv.AGraph(directed=True, strict=False)
+        if not os.path.isdir(apath):
+            os.mkdir(apath)
+        classes = self.g.subjects(a, owl.Class)
+        for c in classes:
+            label = self.g.label(c)
+            A.add_node(label, style="filled")
+            n = A.get_node(label)
+            n.attr['color'] = "#A2F3D1"
+        datap = [i for i in self.g.subjects(a, owl.DatatypeProperty)]
+        for p in datap:
+            datat = [i for i in self.g.objects(None, p)][0]
+            label = datat.split("/")[-1]
+            A.add_node(label, style="filled")
+            n = A.get_node(label)
+            n.attr['color'] = "#FFE4AA"
+            ant_con = [i for i in self.g.query("select ?a ?c where { ?a <%s> ?c }" % (p,))]
+            for e in ant_con:
+                ls = str(self.g.label(e[0]))
+                lp = str(self.g.label(p))
+                ekey = '{}-{}-{}'.format(ls, lp, label)
+                A.add_edge(ls, label, ekey)
+                e = A.get_edge(ls, label, key=ekey)
+                e.attr["label"] = lp
+                e.attr["color"] = "#A2F3D1"
+                e.attr["penwidth"] = 2
+        preds = self.g.predicates()
+        preds = [i for i in preds if not i.startswith("http://www.w3.org/") and i not in datap]
+        self.pp = pp = {}
+        for pred in preds:
+            ant_con = [i for i in self.g.query("select ?a ?c where { ?a <%s> ?c }" % (pred,))]
+            pp[pred] = ant_con
+            for e in ant_con:
+                ls = str(self.g.label(e[0]))
+                lp = str(self.g.label(pred))
+                lo = str(self.g.label(e[1]))
+                ekey = '{}-{}-{}'.format(ls, lp, lo)
+                A.add_edge(ls, lo, ekey)
+                e = A.get_edge(ls, lo, key=ekey)
+                e.attr["label"] = lp
+                e.attr["color"] = "#A2F3D1"
+                e.attr["penwidth"] = 2
+        ant_con = [i for i in self.g.query("select ?a ?c where { ?a <%s> ?c }" % (owl.subClassOf,))]
+        for e in ant_con:
+            ls = str(self.g.label(e[0]))
+            lo = str(self.g.label(e[1]))
+            ekey = '{}-subClass-{}'.format(ls, lo)
+            A.add_edge(ls, lo, ekey)
+            e = A.get_edge(ls, lo, key=ekey)
+            e.attr["color"] = "#A2C3A1"
+            e.attr["penwidth"] = 2
+            e.attr["arrowhead"] = "empty"
+            e.attr["arrowsize"] = 1.5
+        A.draw(os.path.join(apath, "draw.png"), prog="dot")
+        A.draw(os.path.join(apath, "draw_circo.png"), prog="circo")
+        A.draw(os.path.join(apath, "draw_twopi.png"), prog="twopi", args="-Granksep=4")
+
 
 
 class TranslationPublishing:

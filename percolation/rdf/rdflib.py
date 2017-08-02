@@ -43,6 +43,11 @@ class NS:
     irc =    r.Namespace("http://purl.org/socialparticipation/irc/") # irc
     gmane =  r.Namespace("http://purl.org/socialparticipation/gmane/") # gmane
     ld  =    r.Namespace("http://purl.org/socialparticipation/ld/")  # linkedin
+
+    aavo  =    r.Namespace("http://purl.org/audiovisualanalytics/")
+    aav  = r.Namespace("http://purl.org/audiovisualanalytics/vocabulary/")
+    aao  =    r.Namespace("http://purl.org/audiovisualanalytics/ontology/")
+
     dbp  =    r.Namespace("http://dbpedia.org/resource/")
     rdf =    r.namespace.RDF
     rdfs =   r.namespace.RDFS
@@ -53,6 +58,7 @@ class NS:
     foaf =   r.namespace.FOAF
     doap =   r.namespace.DOAP
     void =   r.namespace.VOID
+    skos =   r.namespace.SKOS
     U=   r.URIRef
 a=NS.rdf.type
 po=NS.po
