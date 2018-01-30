@@ -55,8 +55,8 @@ def encapsulateLongTable(string_table, caption, size):
     return table
 
 
-def encapsulateTable(string_table, caption):
-    caption_ = "\\caption{{{}}}\n".format(caption)
+def encapsulateTable(string_table, caption, label='foobar'):
+    caption_ = "\\caption{{{}}}\label{{{}}}\n".format(caption, label)
     header = "\\begin{table*}[h!]\n\\begin{center}\n"+caption_+"\\begin{tabular}{| l |"+" c |"*(string_table.split("hline")[0].count("&"))+"}\\hline\n"
     footer = "\\end{tabular}\\end{center}\n\\end{table*}"
     table = header+string_table+footer
@@ -64,16 +64,16 @@ def encapsulateTable(string_table, caption):
 
 
 # def doubleLines(tablefname, hlines=["i1", "i2"], vlines=["j1", "j2"], hlines_=[]):
-def doubleLines(fname, hlines=[1, 2], vlines=[2, -1], hlines_=[]):
+def doubleLines(fname, hlines=[1, 2], vlines=[2, -1], hlines_=[], vlines_=[]):
     """make double lines or remove horizontal lines in a string latex table
 
     tablefname: the filename for the file with the table
 
     hlines: indexes of the horizontal lines to be duplicated
-
     vlines: indexes of the vertical lines to be duplicated
-
-    hlines_: indexes of the horizontal lines to be omitted"""
+    hlines_: indexes of the horizontal lines to be omitted.
+    vlines_: indexes of the vertical lines to be omitted.
+    """
     with open(fname, "r") as f:
         lines = f.read()
     # colocando barras nas linhas verticais
@@ -85,6 +85,10 @@ def doubleLines(fname, hlines=[1, 2], vlines=[2, -1], hlines_=[]):
         j_ = indexes[j]+foo
         header_ = header_[:j_]+"||"+header_[j_+1:]
         foo += 1
+    indexes = [i.start() for i in re.finditer("\|{1,2}", header)]
+    for j in vlines_:
+        j_ = indexes[j]
+        header_ = header_[:j_]+" "+header_[j_+1:]
     lines__ = lines.replace(header, header_)
     # colocando barras nas linhas horizontais
     linhas = lines__.split("\\hline")

@@ -151,6 +151,12 @@ def pRead(tfilename):
         tobject=pickle.load(f)
     return tobject
 
+def clearImport(packname):
+    import sys
+    keys=tuple(sys.modules.keys())
+    for key in keys:
+        if packname in key:
+            del sys.modules[key]
 
 class EmptyClass:
     pass

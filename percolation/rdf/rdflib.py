@@ -47,6 +47,7 @@ class NS:
     aavo  =    r.Namespace("http://purl.org/audiovisualanalytics/")
     aav  = r.Namespace("http://purl.org/audiovisualanalytics/vocabulary/")
     aao  =    r.Namespace("http://purl.org/audiovisualanalytics/ontology/")
+    voeiia  =    r.Namespace("http://purl.org/audiovisualanalytics/voeiia/")
 
     dbp  =    r.Namespace("http://dbpedia.org/resource/")
     rdf =    r.namespace.RDF

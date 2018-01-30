@@ -53,18 +53,18 @@ class Ontology:
         if not triple[2].startswith("http://www.w3.org/2001/XMLSchema#"):
             self.g.add([triple[2], rdfs.label, self.mkLabel(triple[2])])
 
-    def render(self, path="./"):
+    def render(self, path="./", fname="aavo"):
         """Render RDF and/or figures"""
         apath = os.path.join(path, "rdf")
         if not os.path.isdir(apath):
             os.mkdir(apath)
-        ttlf = os.path.join(apath, "aavo0.01.ttl")
+        ttlf = os.path.join(apath, "%s.ttl"%(fname,))
         self.g.serialize(ttlf, "turtle")
-        owlf = os.path.join(apath, "aavo0.01.owl")
+        owlf = os.path.join(apath, "%s.owl"%(fname,))
         self.g.serialize(owlf, "xml")
-        self.renderFigs(path)
+        self.renderFigs(path, fname)
 
-    def renderFigs(self, path):
+    def renderFigs(self, path, fname):
         apath = os.path.join(path, "figs")
         datacounter = 0
         A = gv.AGraph(directed=True, strict=False)
@@ -120,9 +120,9 @@ class Ontology:
             e.attr["penwidth"] = 2
             e.attr["arrowhead"] = "empty"
             e.attr["arrowsize"] = 1.5
-        A.draw(os.path.join(apath, "draw.png"), prog="dot")
-        A.draw(os.path.join(apath, "draw_circo.png"), prog="circo")
-        A.draw(os.path.join(apath, "draw_twopi.png"), prog="twopi", args="-Granksep=4")
+        A.draw(os.path.join(apath, "%s.png"%(fname,)), prog="dot")
+        A.draw(os.path.join(apath, "%s_circo.png"%(fname,)), prog="circo")
+        A.draw(os.path.join(apath, "%s_twopi.png"%(fname,)), prog="twopi", args="-Granksep=4")
 
 
 
