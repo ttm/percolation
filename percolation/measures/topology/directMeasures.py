@@ -3,10 +3,89 @@ import numpy as n
 import percolation as P
 __doc__ = "for topological measures"
 
+def simpleMeasures(gg=x.DiGraph()):
+    network = gg
+    degrees = gg.degree()
+    nodes_ = sorted(network.nodes(), key=lambda x : degrees[x])
+    degrees_ = list(dict(degrees).values())
+    degrees_ = [degrees[i] for i in nodes_]
+    if gg.is_directed():
+        in_degrees = gg.in_degree()
+        out_degrees = gg.out_degree()
+        strengths = gg.degree(weight="weight")
+        in_strengths = gg.in_degree(weight="weight")
+        out_strengths = gg.out_degree(weight="weight")
+        strengths_ = [strengths[i] for i in nodes_]
+        gg_ = gg.to_undirected()
+    else:
+        gg_ = gg
+    # betweenness = x.betweenness.betweenness_centrality(gg)
+    clustering = x.clustering(gg_)
+    clustering_ = [clustering[i] for i in nodes_]
+    k = 30
+    if k > gg.number_of_nodes():
+        k = gg.number_of_nodes() // 2
+    bet = x.betweenness_centrality(gg, k)
+    del k
+    bet_ = [bet[i] for i in nodes_]
+    nnodes = gg.number_of_nodes()
+    nedges = gg.number_of_edges()
+    comp_ = max(x.connected_component_subgraphs(gg_), key=len)
+    size_component = comp_.number_of_nodes()
+    frac_connected = 100*size_component/nnodes
+    comp = max(x.weakly_connected_component_subgraphs(gg), key=len)
+    frac_weakly_connected = 100*comp.number_of_nodes()/nnodes
+    weights = [i[2]["weight"] for i in gg.edges(data=True)]
+    frac_strongly_connected = 100*list(x.strongly_connected_component_subgraphs(gg))[0].number_of_nodes()/nnodes
+
+    asymmetries = []
+    disequilibriums = []
+    asymmetries_edge_mean = []
+    asymmetries_edge_std = []
+    disequilibrium_edge_mean = []
+    disequilibrium_edge_std = []
+    for node in nodes_:
+        if not degrees[node]:
+            asymmetries.append(0.)
+            disequilibriums.append( 0.)
+            asymmetries_edge_mean.append(0.)
+            asymmetries_edge_std.append(0.)    
+            disequilibrium_edge_mean.append(0.)
+            disequilibrium_edge_std.append(0.)
+        else:
+            asymmetries.append(
+                (in_degrees[node]-out_degrees[node])/degrees[node])
+            disequilibriums.append( 
+                (in_strengths[node]-out_strengths[node])/strengths[node])
+            edge_asymmetries = ea = []
+            edge_disequilibriums = ed = []
+            predecessors = network.predecessors(node)
+            successors = network.successors(node)
+            for pred in predecessors:
+                if pred in successors:
+                    ea.append( 0. )
+                    ed.append((network[pred][node]['weight']-network[node][pred]['weight'])/strengths[node])
+                else:
+                    ea.append( 1. )
+                    ed.append(network[pred][node]['weight']/strengths[node])
+            for suc in successors:
+                if suc in predecessors:
+                    pass
+                else:
+                    ea.append(-1.)
+                    ed.append(-network[node][suc]['weight']/strengths[node])
+            asymmetries_edge_mean.append(   n.mean(ea))
+            asymmetries_edge_std .append(   n.std(ea))  
+            disequilibrium_edge_mean.append(n.mean(ed))
+            disequilibrium_edge_std.append( n.std(ed)) 
+
+    overall_measures = _overallMeasures(locals())
+
+    return locals()
 
 # @profile  # uncomment for lineprofiling
 def topologicalMeasures(gg=x.Graph()):
-    """A detailed info about one graph.
+    """Returns a detailed profiling of one graph.
 
     Information about date, number of friends, friendships,
     interactions, etc.
@@ -77,7 +156,7 @@ def _overallMeasures(topom_dict):
     """Overall measures of a network.
 
     Used by: P.topology.measures.topologicalMeasures()"""
-    vertex_measures = "degrees_", "strengths_", "clustering_", "clustering_w_", "square_clustering_", "closeness_", "eccentricity_"
+    vertex_measures = "degrees_", "strengths_", "clustering_", "clustering_w_", "square_clustering_", "closeness_", "eccentricity_", 'asymmetries', 'disequilibriums', 'asymmetries_edge_mean', 'asymmetries_edge_std', 'disequilibrium_edge_mean', 'disequilibrium_edge_std'
     max_measures = "weights", "strengths_"
     network_measures = "nnodes", "nedges", "prob", "max_degree_empirical", "transitivity", "transitivity_u", "diameter", "radius", "frac_connected", "size_component", "ashort_path", "ashort_path_u", "ashort_path_w", "ashort_path_uw", "ncenter", "nperiphery", "frac_strongly_connected", "frac_weakly_connected",
     sector_measures = "sectorialized_nagents__",
