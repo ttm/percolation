@@ -19,16 +19,19 @@ class Ontology:
         self.terms = terms
         self.bindNamespaces(namespaces)
         for triple in triples:
+            if type(triple[2]) == str:
+                triple = (triple[0], triple[1], r.Literal(triple[2]))
+            elif triple[1] != rdfs.subPropertyOf:
+                g.add([triple[2], a, owl.Class])
+            if triple[1] != rdfs.subPropertyOf:
+                g.add([triple[0], a, owl.Class])
             g.add(triple)
             # add subject as class:
-            g.add([triple[0], a, owl.Class])
             # add predicate as property
             if triple[2].startswith("http://www.w3.org/2001/XMLSchema#"):
                 g.add([triple[1], a, owl.DatatypeProperty])
             else:
                 g.add([triple[1], a, owl.ObjectProperty])
-                # add object as class?!
-                g.add([triple[2], a, owl.Class])
             self.addLabels(triple)
 
     def bindNamespaces(self, namespaces):
@@ -51,7 +54,8 @@ class Ontology:
         if not triple[1].startswith('http://www.w3.org/2002/07/owl#'):
             self.g.add([triple[1], rdfs.label, self.mkLabel(triple[1])])
         if not triple[2].startswith("http://www.w3.org/2001/XMLSchema#"):
-            self.g.add([triple[2], rdfs.label, self.mkLabel(triple[2])])
+            if type(triple[2]) != r.Literal:
+                self.g.add([triple[2], rdfs.label, self.mkLabel(triple[2])])
 
     def render(self, path="./", fname="aavo"):
         """Render RDF and/or figures"""
@@ -79,20 +83,36 @@ class Ontology:
         datap = [i for i in self.g.subjects(a, owl.DatatypeProperty)]
         for p in datap:
             datat = [i for i in self.g.objects(None, p)][0]
-            label = datat.split("/")[-1]
-            A.add_node(label, style="filled")
-            n = A.get_node(label)
-            n.attr['color'] = "#FFE4AA"
-            ant_con = [i for i in self.g.query("select ?a ?c where { ?a <%s> ?c }" % (p,))]
-            for e in ant_con:
-                ls = str(self.g.label(e[0]))
-                lp = str(self.g.label(p))
-                ekey = '{}-{}-{}'.format(ls, lp, label)
-                A.add_edge(ls, label, ekey)
-                e = A.get_edge(ls, label, key=ekey)
-                e.attr["label"] = lp
-                e.attr["color"] = "#A2F3D1"
-                e.attr["penwidth"] = 2
+            if '/' in datap:
+                label = datat.split("/")[-1]
+                A.add_node(label, style="filled")
+                n = A.get_node(label)
+                n.attr['color'] = "#FFE4AA"
+                ant_con = [i for i in self.g.query("select ?a ?c where { ?a <%s> ?c }" % (p,))]
+                for e in ant_con:
+                    ls = str(self.g.label(e[0]))
+                    lp = str(self.g.label(p))
+                    ekey = '{}-{}-{}'.format(ls, lp, label)
+                    A.add_edge(ls, label, ekey)
+                    e = A.get_edge(ls, label, key=ekey)
+                    e.attr["label"] = lp
+                    e.attr["color"] = "#A2F3D1"
+                    e.attr["penwidth"] = 2
+            else:
+                label = datat
+                A.add_node(label, style="filled")
+                n = A.get_node(label)
+                n.attr['color'] = "#FFA46A"
+                ant_con = [i for i in self.g.query("select ?a ?c where { ?a <%s> ?c }" % (p,))]
+                for e in ant_con:
+                    ls = str(self.g.label(e[0]))
+                    lp = str(self.g.label(p))
+                    ekey = '{}-{}-{}'.format(ls, lp, label)
+                    A.add_edge(ls, label, ekey)
+                    e = A.get_edge(ls, label, key=ekey)
+                    e.attr["label"] = lp
+                    e.attr["color"] = "#A2A361"
+                    e.attr["penwidth"] = 2
         preds = self.g.predicates()
         preds = [i for i in preds if not i.startswith("http://www.w3.org/") and i not in datap]
         self.pp = pp = {}
@@ -107,7 +127,7 @@ class Ontology:
                 A.add_edge(ls, lo, ekey)
                 e = A.get_edge(ls, lo, key=ekey)
                 e.attr["label"] = lp
-                e.attr["color"] = "#A2F3D1"
+                e.attr["color"] = "#A2A361"
                 e.attr["penwidth"] = 2
         ant_con = [i for i in self.g.query("select ?a ?c where { ?a <%s> ?c }" % (owl.subClassOf,))]
         for e in ant_con:
@@ -116,7 +136,7 @@ class Ontology:
             ekey = '{}-subClass-{}'.format(ls, lo)
             A.add_edge(ls, lo, ekey)
             e = A.get_edge(ls, lo, key=ekey)
-            e.attr["color"] = "#A2C3A1"
+            e.attr["color"] = "#A2A361"
             e.attr["penwidth"] = 2
             e.attr["arrowhead"] = "empty"
             e.attr["arrowsize"] = 1.5
