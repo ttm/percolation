@@ -98,6 +98,7 @@ setup(
     package_data={
         'tagger': ['percolation/measures/text/brill_taggerT2M1'],
     },
+    include_package_data=True,
 
     # Although 'package_data' is the preferred approach, in some case you may
     # need to place data files outside of your packages.
