@@ -1,16 +1,9 @@
 # percolation
 the percolation python package for harnessing open linked social data
 
-## core features
-  - Provide routines for percolation in social systems by experiments and processes.
-  - Ease knowledge about the networked self.
-  - Analyses of social systems through textual, topological, temporal statistics within a typology framework of agents and networks.
-  - Art and games from social structures, such as music and animation.
-  - Integration of resources through RDF data and OWL ontologies.
-  - Cross provenance resource recommendation, extending facilities from the Participation package.
-  - WWW integration to provide data and media.
-
 ## install with:
+If you are running Ubuntu, you may want to install pygraphviz from standard (apt) package manager.
+
     $ pip install percolation
 or
     $ python setup.py install
@@ -20,11 +13,20 @@ For greater control of customization (and debugging), clone the repo and install
 This install method is especially useful when reloading modified module in subsequent runs of percolation
 (usually with the standard importlib).
 
-Percolation uses social, music and visuals packages to enable anthropological physics experiments and social harnessing:
+Percolation may use social, music and visuals packages to enable anthropological physics experiments and social harnessing:
 - https://github.com/ttm/social
 - https://github.com/ttm/music
 - https://github.com/ttm/visuals
 
+
+## core features
+  - Provide routines for percolation in social systems by experiments and processes.
+  - Ease knowledge about the networked self.
+  - Analyses of social systems through textual, topological, temporal statistics within a typology framework of agents and networks.
+  - Art and games from social structures, such as music and animation.
+  - Integration of resources through RDF data and OWL ontologies.
+  - Cross provenance resource recommendation, extending facilities from the Participation package.
+  - WWW integration to provide data and media.
 
 ## coding conventions
 A function name has a verb if it changes state of initialized objects, if it only "returns something", it is has no verb in name.
