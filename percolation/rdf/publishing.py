@@ -4,7 +4,7 @@ import datetime
 import shutil
 import numpy as n
 import nltk as k
-import pygraphviz as gv
+# import pygraphviz as gv
 from percolation.rdf import NS, po, c, add, a
 import percolation as P
 import rdflib as r

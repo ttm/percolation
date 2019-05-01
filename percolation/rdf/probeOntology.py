@@ -1,6 +1,6 @@
 import os
 import rdflib as r
-import pygraphviz as gv
+# import pygraphviz as gv
 import percolation as P
 from percolation import c
 from .rdflib import NS, a
