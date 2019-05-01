@@ -95,6 +95,9 @@ setup(
     #package_data={
     #    'sample': ['package_data.dat'],
     #},
+    package_data={
+        'tagger': ['percolation/measures/text/brill_taggerT2M1'],
+    },
 
     # Although 'package_data' is the preferred approach, in some case you may
     # need to place data files outside of your packages.
