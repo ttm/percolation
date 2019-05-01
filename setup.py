@@ -96,7 +96,7 @@ setup(
     #    'sample': ['package_data.dat'],
     #},
     package_data={
-        'tagger': ['percolation/measures/text/brill_taggerT2M1'],
+        'tagger': ['measures/text/brill_taggerT2M1'],
     },
     include_package_data=True,
 
